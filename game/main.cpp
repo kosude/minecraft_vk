@@ -5,17 +5,22 @@
  *   Please see the LICENCE file for more information.
  */
 
-#include <iostream>
+#include <stdexcept>
 
+#include "game/game.hpp"
 #include "utils/log.hpp"
 
 using namespace VKGame;
 
 int main() {
-    Utils::Log("Hello world");
-    Utils::Note("Hello world");
-    Utils::Warn("Hello world");
-    Utils::Error("Hello world");
+    Game::Game game;
 
-    return 0;
+    try {
+        game.Run();
+    } catch (const std::exception &e) {
+        Utils::Error(e.what());
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

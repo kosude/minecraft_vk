@@ -1,0 +1,41 @@
+/*
+ *   Copyright (c) 2023 Jack Bennett
+ *   All rights reserved.
+ *
+ *   Please see the LICENCE file for more information.
+ */
+
+#pragma once
+#ifndef __game__game_hpp
+#define __game__game_hpp
+
+#include "renderer/renderer.hpp"
+
+namespace VKGame::Game {
+    /**
+     * @brief Game application class
+     */
+    class Game {
+    private:
+        Renderer::Renderer _renderer;
+
+    public:
+        /**
+         * @brief Initialise the game process
+         */
+        Game();
+
+        /**
+         * @brief Terminate the game process
+         *
+         */
+        ~Game();
+
+        /**
+         * @brief Game main loop
+         */
+        void Run();
+    };
+}
+
+#endif

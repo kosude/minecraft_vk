@@ -13,7 +13,12 @@ else()
 endif()
 
 set(SOURCES
+    "game/game.cpp"
+    "game/game.hpp"
     "game/main.cpp"
+
+    "renderer/renderer.cpp"
+    "renderer/renderer.hpp"
 
     "utils/log.cpp"
     "utils/log.hpp"
@@ -26,3 +31,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${D
 
 add_subdirectory("${DEPS_DIR}/cutils")
 target_link_libraries(${PROJECT_NAME} clist cio)
+
+find_package(Vulkan REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
