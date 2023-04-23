@@ -9,6 +9,8 @@
 #ifndef __utils__log_hpp
 #define __utils__log_hpp
 
+#include <iostream>
+
 namespace VKGame::Utils {
     /**
      * @brief Log a message to stdout

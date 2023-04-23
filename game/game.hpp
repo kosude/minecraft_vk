@@ -10,6 +10,7 @@
 #define __game__game_hpp
 
 #include "renderer/renderer.hpp"
+#include "renderer/window.hpp"
 
 namespace VKGame::Game {
     /**
@@ -18,6 +19,7 @@ namespace VKGame::Game {
     class Game {
     private:
         Renderer::Renderer _renderer;
+        Renderer::Window _main_window;
 
     public:
         /**
