@@ -15,23 +15,46 @@
 #include <iostream>
 
 namespace VKGame::Renderer {
+    class Window;
+
     /**
      * @brief Game renderer (Vulkan)
      */
     class Renderer {
     private:
         VkInstance _instance;
+
+        VkPhysicalDevice _physical_device;
+        VkDevice _device;
+        VkQueue _graphics_queue;
+        VkQueue _present_queue;
+
 #       ifdef DEBUG
             VkDebugUtilsMessengerEXT _debug_messenger;
 #       endif
 
-        void _CreateInstance(); // (also creates a debug messenger if in debug config)
+        VkSurfaceKHR _main_surface;
+
+        void _CreateInstance( // also creates a debug messenger if in debug config
+            VkInstance *instance
+        );
+        void _CreateSurface(
+            const Window &window,
+            VkSurfaceKHR *surface
+        );
+        void _CreateLogicalDevice( // also retrieves queue handles
+            VkDevice *device
+        );
 
     public:
         /**
          * @brief Construct a new game renderer
+         *
+         * @param main_window Main game window
          */
-        Renderer();
+        Renderer(
+            const Window &main_window
+        );
 
         /**
          * @brief Destroy the game renderer -- clean up Vulkan objects, etc.

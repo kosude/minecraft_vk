@@ -6,8 +6,14 @@
  */
 
 #include <iostream>
+#include <set>
 
-#include "renderer/vk_extension.hpp"
+#define GLFW_INCLUDE_VULKAN
+#define VK_NO_PROTOTYPES
+#include "renderer/window.hpp"
+
+#include "renderer/device_manager.hpp"
+#include "renderer/extension_manager.hpp"
 #include "utils/log.hpp"
 
 #include "renderer.hpp"
@@ -49,16 +55,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverit
 }
 
 namespace VKGame::Renderer {
-    void Renderer::_CreateInstance() {
+    void Renderer::_CreateInstance(VkInstance *instance) {
         VkInstanceCreateInfo instance_create_info = {};
 
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = nullptr;
 
-        std::vector<const char *> enabled_layers = VkExtensionManager::GetRequiredLayers();
-        VkExtensionManager::CheckLayerNames(enabled_layers, VkExtensionImportance::Required);
-        std::vector<const char *> enabled_exts = VkExtensionManager::GetRequiredInstanceExtensions();
-        VkExtensionManager::CheckInstanceExtensionNames(enabled_exts, VkExtensionImportance::Required);
+        std::vector<const char *> enabled_layers = ExtensionManager::GetRequiredLayers();
+        ExtensionManager::CheckLayerNames(enabled_layers, ExtensionImportance::Required);
+        std::vector<const char *> enabled_exts = ExtensionManager::GetRequiredInstanceExtensions();
+        ExtensionManager::CheckInstanceExtensionNames(enabled_exts, ExtensionImportance::Required);
 
         instance_create_info.enabledLayerCount = enabled_layers.size();
         instance_create_info.ppEnabledLayerNames = (const char *const *) enabled_layers.data();
@@ -86,29 +92,104 @@ namespace VKGame::Renderer {
             instance_create_info.pNext = &debug_messenger_create_info;
 #       endif
 
-        if (vkCreateInstance(&instance_create_info, nullptr, &_instance)) {
+        if (vkCreateInstance(&instance_create_info, nullptr, instance)) {
             Utils::Error("Failed to create Vulkan instance");
         }
 
         // load vulkan entrypoints + extensions
-        volkLoadInstance(_instance);
+        volkLoadInstance(*instance);
 
         // create debug messenger if in debug mode
 #       ifdef DEBUG
-            if (vkCreateDebugUtilsMessengerEXT(_instance, &debug_messenger_create_info, nullptr, &_debug_messenger)) {
+            if (vkCreateDebugUtilsMessengerEXT(*instance, &debug_messenger_create_info, nullptr, &_debug_messenger)) {
                 Utils::Error("Failed to create Vulkan debug messenger");
             }
 #       endif
     }
 
-    Renderer::Renderer() {
+    void Renderer::_CreateSurface(const Window &window, VkSurfaceKHR *surface) {
+        if (glfwCreateWindowSurface(_instance, window._handle, nullptr, surface)) {
+            Utils::Error("Failed to create Vulkan surface for game window");
+        }
+    }
+
+    void Renderer::_CreateLogicalDevice(VkDevice *device) {
+        DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(_physical_device, _main_surface);
+
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        std::set<int32_t> unique_queue_families = {
+            queue_family_info.graphics_family_index,
+            queue_family_info.present_family_index
+        };
+
+        float queue_priority = 1.0f;
+
+        // create one queue for each unique queue family
+        for (int32_t qf : unique_queue_families) {
+            VkDeviceQueueCreateInfo queue_create_info {};
+            queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queue_create_info.queueFamilyIndex = qf;
+            queue_create_info.queueCount = 1;
+            queue_create_info.pQueuePriorities = &queue_priority;
+
+            queue_create_infos.push_back(queue_create_info);
+        }
+
+        // requesting device features
+        // we do not need to check these as they would already have been asserted when selecting the physical device
+        VkPhysicalDeviceFeatures device_features = ExtensionManager::GetRequiredDeviceFeatures();
+
+        VkDeviceCreateInfo device_create_info = {};
+        device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+        device_create_info.pQueueCreateInfos = queue_create_infos.data();
+        device_create_info.queueCreateInfoCount = queue_create_infos.size();
+
+        device_create_info.pEnabledFeatures = &device_features;
+
+        // setting layers for compatibility with older Vulkan implementations...
+        std::vector<const char *> enabled_layers = ExtensionManager::GetRequiredLayers();
+        device_create_info.enabledLayerCount = enabled_layers.size();
+        device_create_info.ppEnabledLayerNames = enabled_layers.data();
+
+        // extensions - again, these would have been checked when selecting physical device.
+        std::vector<const char *> enabled_exts = ExtensionManager::GetRequiredDeviceExtensions();
+        device_create_info.enabledExtensionCount = enabled_exts.size();
+        device_create_info.ppEnabledExtensionNames = enabled_exts.data();
+
+        if (vkCreateDevice(_physical_device, &device_create_info, nullptr, device)) {
+            Utils::Error("Failed to create Vulkan device interface");
+        }
+
+        // retrieve queue handles
+        // 0 is used as the queue index as there is only one queue created for each family.
+        vkGetDeviceQueue(*device, queue_family_info.graphics_family_index, 0, &_graphics_queue);
+        vkGetDeviceQueue(*device, queue_family_info.present_family_index, 0, &_present_queue);
+    }
+
+    Renderer::Renderer(const Window &main_window) {
         Utils::Note("Creating renderer");
 
         if (volkInitialize()) {
             Utils::Error("Failed to load Vulkan (via volk)");
         }
 
-        _CreateInstance();
+        // create vulkan instance
+        _CreateInstance(&_instance);
+
+        // create game window vulkan surface
+        _CreateSurface(main_window, &_main_surface);
+
+        // get best vulkan physical device
+        uint32_t physical_device_choice_count = 0;
+        vkEnumeratePhysicalDevices(_instance, &physical_device_choice_count, nullptr);
+        std::vector<VkPhysicalDevice> physical_device_choices(physical_device_choice_count);
+        vkEnumeratePhysicalDevices(_instance, &physical_device_choice_count, physical_device_choices.data());
+
+        _physical_device = DeviceManager::GetOptimalPhysicalDevice(physical_device_choices, _main_surface);
+
+        // create vulkan logical device
+        _CreateLogicalDevice(&_device);
     }
 
     void Renderer::Destroy() {
@@ -118,6 +199,8 @@ namespace VKGame::Renderer {
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 #       endif
 
+        vkDestroyDevice(_device, nullptr);
+        vkDestroySurfaceKHR(_instance, _main_surface, nullptr);
         vkDestroyInstance(_instance, nullptr);
     }
 }

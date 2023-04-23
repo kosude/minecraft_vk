@@ -18,8 +18,8 @@ namespace VKGame::Game {
      */
     class Game {
     private:
-        Renderer::Renderer _renderer;
         Renderer::Window _main_window;
+        Renderer::Renderer _renderer;
 
     public:
         /**

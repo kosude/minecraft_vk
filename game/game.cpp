@@ -12,7 +12,7 @@
 #include "game.hpp"
 
 namespace VKGame::Game {
-    Game::Game() : _main_window(640, 480, "VKGame") {
+    Game::Game() : _main_window(640, 480, "VKGame"), _renderer(_main_window) {
         Utils::Note("Initialising game");
     }
 
@@ -26,6 +26,8 @@ namespace VKGame::Game {
     }
 
     void Game::Run() {
+        Utils::Note("Thank you for playing! ^-^");
+
         while (true) {
             // exit when main window closes
             if (!_main_window.Update()) {

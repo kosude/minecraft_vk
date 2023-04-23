@@ -19,6 +19,8 @@ namespace VKGame::Renderer {
      */
     class Window {
     private:
+        friend class Renderer;
+
         GLFWwindow *_handle;
 
     public:

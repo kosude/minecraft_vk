@@ -6,8 +6,9 @@ set(SOURCES
     "game/game.cpp"                         "game/game.hpp"
     "game/main.cpp"
 
+    "renderer/device_manager.cpp"           "renderer/device_manager.hpp"
     "renderer/renderer.cpp"                 "renderer/renderer.hpp"
-    "renderer/vk_extension.cpp"             "renderer/vk_extension.hpp"
+    "renderer/extension_manager.cpp"        "renderer/extension_manager.hpp"
     "renderer/window.cpp"                   "renderer/window.hpp"
 
     "utils/log.cpp"                         "utils/log.hpp"
