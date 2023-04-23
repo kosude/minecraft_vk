@@ -40,7 +40,10 @@ static std::string __GetCurrentDateTime(const bool &with_time) {
 
 namespace VKGame::Utils {
     void Log(const std::string &msg) {
-        std::cout << "[" << __GetCurrentDateTime(true) << "] " << msg << std::endl;
+        // verbose messages not shown in release
+#       ifdef DEBUG
+            std::cout << "[" << __GetCurrentDateTime(true) << "] " << msg << std::endl;
+#       endif
     }
 
     void Note(const std::string &msg) {
@@ -55,9 +58,13 @@ namespace VKGame::Utils {
         ciocolstatedef(stdout);
     }
 
-    void Error(const std::string &msg) {
+    void Error(const std::string &msg, const bool &exit_proc) {
         ciocolstateset(CIOCOL_RED, 0xff, stdout);
         std::cout << "[" << __GetCurrentDateTime(true) << "] ERROR: " << msg << std::endl;
         ciocolstatedef(stdout);
+
+        if (exit_proc) {
+            throw new std::runtime_error(msg);
+        }
     }
 }

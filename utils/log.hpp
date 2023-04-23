@@ -45,7 +45,8 @@ namespace VKGame::Utils {
      * @param msg Message string
      */
     void Error(
-        const std::string &msg
+        const std::string &msg,
+        const bool &exit_proc = true
     );
 }
 

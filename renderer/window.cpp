@@ -13,6 +13,10 @@ namespace VKGame::Renderer {
     Window::Window(const uint32_t &width, const uint32_t &height, const std::string &title) {
         Utils::Note("Creating window");
 
+        glfwSetErrorCallback([](int error_code, const char* description) {
+            Utils::Error("GLFW error code " + std::to_string(error_code) + " - " + description);
+        });
+
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -21,7 +25,7 @@ namespace VKGame::Renderer {
         _handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     }
 
-    Window::~Window() {
+    void Window::Destroy() {
         Utils::Note("Destroying window");
 
         glfwDestroyWindow(_handle);

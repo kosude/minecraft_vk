@@ -2,21 +2,12 @@ cmake_minimum_required(VERSION 3.10)
 
 project("VKGame")
 
-if (MSVC)
-    set(PROJ_COMPILE_OPTIONS
-        /W4 /WX
-    )
-else()
-    set(PROJ_COMPILE_OPTIONS
-        -Wall -Wextra -pedantic -Werror
-    )
-endif()
-
 set(SOURCES
     "game/game.cpp"                         "game/game.hpp"
     "game/main.cpp"
 
     "renderer/renderer.cpp"                 "renderer/renderer.hpp"
+    "renderer/vk_extension.cpp"             "renderer/vk_extension.hpp"
     "renderer/window.cpp"                   "renderer/window.hpp"
 
     "utils/log.cpp"                         "utils/log.hpp"
@@ -24,7 +15,9 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE ${PROJ_COMPILE_OPTIONS})
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "DEBUG")
+endif()
 
 set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${DEPS_DIR})
@@ -38,3 +31,15 @@ target_link_libraries(${PROJECT_NAME} glfw)
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+if (WIN32)
+    set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
+elseif (APPLE)
+    set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_MACOS_MVK)
+elseif (UNIX)
+    # will likely work on most unix machines
+    set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_XLIB_KHR)
+endif()
+
+add_subdirectory("${DEPS_DIR}/volk")
+target_link_libraries(${PROJECT_NAME} volk)

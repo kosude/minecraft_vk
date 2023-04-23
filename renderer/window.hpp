@@ -9,7 +9,6 @@
 #ifndef __renderer__window_hpp
 #define __renderer__window_hpp
 
-#define GLFW_INCLUDE_VULKAN
 #include <glfw/include/GLFW/glfw3.h>
 
 #include <iostream>
@@ -39,7 +38,7 @@ namespace VKGame::Renderer {
         /**
          * @brief Destroy the window
          */
-        ~Window();
+        void Destroy();
 
         /**
          * @brief Update logic for the window

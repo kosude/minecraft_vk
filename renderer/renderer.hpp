@@ -9,11 +9,24 @@
 #ifndef __renderer__renderer_hpp
 #define __renderer__renderer_hpp
 
+#include <volk/volk.h>
+
+#include <vector>
+#include <iostream>
+
 namespace VKGame::Renderer {
     /**
      * @brief Game renderer (Vulkan)
      */
     class Renderer {
+    private:
+        VkInstance _instance;
+#       ifdef DEBUG
+            VkDebugUtilsMessengerEXT _debug_messenger;
+#       endif
+
+        void _CreateInstance(); // (also creates a debug messenger if in debug config)
+
     public:
         /**
          * @brief Construct a new game renderer
@@ -23,7 +36,7 @@ namespace VKGame::Renderer {
         /**
          * @brief Destroy the game renderer -- clean up Vulkan objects, etc.
          */
-        ~Renderer();
+        void Destroy();
     };
 }
 

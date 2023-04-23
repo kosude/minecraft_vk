@@ -19,6 +19,9 @@ namespace VKGame::Game {
     Game::~Game() {
         Utils::Note("Terminating game");
 
+        _renderer.Destroy();
+
+        _main_window.Destroy();
         Renderer::Window::TerminateGLFW();
     }
 
