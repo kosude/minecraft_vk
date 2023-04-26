@@ -44,6 +44,7 @@ namespace VKGame::Renderer {
 
     std::vector<const char *> ExtensionManager::GetRequiredDeviceExtensions() {
         std::vector<const char*> required_exts = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
         return required_exts;

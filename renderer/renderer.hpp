@@ -35,6 +35,11 @@ namespace VKGame::Renderer {
 
         VkSurfaceKHR _main_surface;
 
+        VkSwapchainKHR _main_swapchain;
+        std::vector<VkImage> _main_swapchain_images;
+        VkFormat _main_swapchain_image_format;
+        VkExtent2D _main_swapchain_extent;
+
         void _CreateInstance( // also creates a debug messenger if in debug config
             VkInstance *instance
         );

@@ -9,6 +9,7 @@
 
 #include "utils/log.hpp"
 #include "renderer/extension_manager.hpp"
+#include "renderer/swap_chain.hpp"
 
 #include "device_manager.hpp"
 
@@ -60,12 +61,18 @@ namespace VKGame::Renderer {
 
         // check queue families
         DeviceQueueFamilyInfo queue_family_info = GetDeviceQueueFamilyInfo(physical_device, surface);
-        if (queue_family_info.graphics_family_index <= -1) {
+        if (!queue_family_info.graphics_family_index.has_value()) {
             Utils::Warn(std::string{"Device "} + device_properties.deviceName + " doesn't meet requirements: missing graphics queue family");
             return false;
         }
-        if (queue_family_info.present_family_index <= -1) {
+        if (!queue_family_info.present_family_index.has_value()) {
             Utils::Warn(std::string{"Device "} + device_properties.deviceName + " doesn't meet requirements: missing presentation queue family");
+            return false;
+        }
+
+        // check swapchain support
+        SwapchainSupportInfo swapchain_caps = Swapchain::GetSupportInfo(physical_device, surface);
+        if (swapchain_caps.formats.empty() || swapchain_caps.present_modes.empty()) {
             return false;
         }
 

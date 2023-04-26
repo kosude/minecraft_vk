@@ -14,6 +14,7 @@
 
 #include "renderer/device_manager.hpp"
 #include "renderer/extension_manager.hpp"
+#include "renderer/swap_chain.hpp"
 #include "utils/log.hpp"
 
 #include "renderer.hpp"
@@ -117,15 +118,15 @@ namespace VKGame::Renderer {
         DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(_physical_device, _main_surface);
 
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        std::set<int32_t> unique_queue_families = {
-            queue_family_info.graphics_family_index,
-            queue_family_info.present_family_index
+        std::set<uint32_t> unique_queue_families = {
+            queue_family_info.graphics_family_index.value(),
+            queue_family_info.present_family_index.value()
         };
 
         float queue_priority = 1.0f;
 
         // create one queue for each unique queue family
-        for (int32_t qf : unique_queue_families) {
+        for (uint32_t qf : unique_queue_families) {
             VkDeviceQueueCreateInfo queue_create_info {};
             queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queue_create_info.queueFamilyIndex = qf;
@@ -163,8 +164,8 @@ namespace VKGame::Renderer {
 
         // retrieve queue handles
         // 0 is used as the queue index as there is only one queue created for each family.
-        vkGetDeviceQueue(*device, queue_family_info.graphics_family_index, 0, &_graphics_queue);
-        vkGetDeviceQueue(*device, queue_family_info.present_family_index, 0, &_present_queue);
+        vkGetDeviceQueue(*device, queue_family_info.graphics_family_index.value(), 0, &_graphics_queue);
+        vkGetDeviceQueue(*device, queue_family_info.present_family_index.value(), 0, &_present_queue);
     }
 
     Renderer::Renderer(const Window &main_window) {
@@ -190,6 +191,16 @@ namespace VKGame::Renderer {
 
         // create vulkan logical device
         _CreateLogicalDevice(&_device);
+
+        // create swapchain + store extra swap data
+        int width, height;
+        glfwGetFramebufferSize(main_window._handle, &width, &height);
+
+        Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);
+        _main_swapchain = swapchain_cl.GetHandle();
+        _main_swapchain_images = swapchain_cl.GetImages();
+        _main_swapchain_image_format = swapchain_cl.GetImageFormat();
+        _main_swapchain_extent = swapchain_cl.GetExtent();
     }
 
     void Renderer::Destroy() {
@@ -198,6 +209,8 @@ namespace VKGame::Renderer {
 #       ifdef DEBUG
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 #       endif
+
+        vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
 
         vkDestroyDevice(_device, nullptr);
         vkDestroySurfaceKHR(_instance, _main_surface, nullptr);

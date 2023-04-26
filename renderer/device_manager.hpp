@@ -12,6 +12,7 @@
 #include <volk/volk.h>
 
 #include <vector>
+#include <optional>
 
 namespace VKGame::Renderer {
     /**
@@ -19,8 +20,8 @@ namespace VKGame::Renderer {
      */
     struct DeviceQueueFamilyInfo {
     public:
-        int32_t graphics_family_index = -1;
-        int32_t present_family_index = -1;
+        std::optional<uint32_t> graphics_family_index = -1;
+        std::optional<uint32_t> present_family_index = -1;
     };
 
     class DeviceManager {
