@@ -199,8 +199,12 @@ namespace VKGame::Renderer {
         Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);
         _main_swapchain = swapchain_cl.GetHandle();
         _main_swapchain_images = swapchain_cl.GetImages();
+        _main_swapchain_image_views = swapchain_cl.CreateImageViews();
         _main_swapchain_image_format = swapchain_cl.GetImageFormat();
         _main_swapchain_extent = swapchain_cl.GetExtent();
+
+        // create graphics pipeline
+        _graphics_pipeline = std::unique_ptr<GraphicsPipeline>(new GraphicsPipeline(_device, swapchain_cl));
     }
 
     void Renderer::Destroy() {
@@ -209,6 +213,12 @@ namespace VKGame::Renderer {
 #       ifdef DEBUG
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 #       endif
+
+        for (VkImageView view : _main_swapchain_image_views) {
+            vkDestroyImageView(_device, view, nullptr);
+        }
+
+        _graphics_pipeline->Destroy();
 
         vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
 

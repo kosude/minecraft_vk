@@ -123,6 +123,40 @@ namespace VKGame::Renderer {
         // store other data
         _extent = extent;
         _image_format = surface_format.format;
+
+        _logical_device = logical_device;
+    }
+
+    std::vector<VkImageView> Swapchain::CreateImageViews() {
+        std::vector<VkImageView> views(_images.size());
+
+        for (uint32_t i = 0; i < _images.size(); i++) {
+            VkImageViewCreateInfo info = {};
+
+            info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.image = _images[i];
+
+            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.format = _image_format;
+
+            info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+            // color targets, no mipmap levels or multiple layers
+            info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            info.subresourceRange.baseMipLevel = 0;
+            info.subresourceRange.levelCount = 1;
+            info.subresourceRange.baseArrayLayer = 0;
+            info.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(_logical_device, &info, nullptr, &views[i])) {
+                Utils::Error("Failed to create image view");
+            }
+        }
+
+        return views;
     }
 
     SwapchainSupportInfo Swapchain::GetSupportInfo(const VkPhysicalDevice &physical_device, const VkSurfaceKHR &surface) {

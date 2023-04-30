@@ -8,11 +8,13 @@ set(SOURCES
 
     "renderer/device_manager.cpp"           "renderer/device_manager.hpp"
     "renderer/extension_manager.cpp"        "renderer/extension_manager.hpp"
+    "renderer/graphics_pipeline.cpp"        "renderer/graphics_pipeline.hpp"
     "renderer/renderer.cpp"                 "renderer/renderer.hpp"
     "renderer/swap_chain.cpp"               "renderer/swap_chain.hpp"
     "renderer/window.cpp"                   "renderer/window.hpp"
 
     "utils/log.cpp"                         "utils/log.hpp"
+    "utils/file_io.cpp"                     "utils/file_io.hpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -45,3 +47,29 @@ endif()
 
 add_subdirectory("${DEPS_DIR}/volk")
 target_link_libraries(${PROJECT_NAME} volk)
+
+set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/renderer/shaders")
+set(SHADER_SOURCES
+    "${SHADER_DIR}/main_fragment.glsl"
+    "${SHADER_DIR}/main_vertex.glsl"
+)
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_LIST_DIR}/spv/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_LIST_DIR}/spv/"
+)
+
+foreach(SHADER ${SHADER_SOURCES})
+    get_filename_component(SHADER_FILENAME ${SHADER} NAME)
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv"
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv"
+        DEPENDS ${SHADER}
+        COMMENT "Building SPIR-V object from ${SHADER_FILENAME}"
+    )
+
+    list(APPEND SPV_SHADERS "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv")
+endforeach()
+
+add_custom_target(shaders_spv ALL DEPENDS "${CMAKE_CURRENT_LIST_DIR}/spv/" ${SPV_SHADERS})
+add_dependencies(${PROJECT_NAME} shaders_spv)

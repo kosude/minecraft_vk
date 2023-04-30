@@ -34,6 +34,8 @@ namespace VKGame::Renderer {
         VkFormat _image_format;
         VkExtent2D _extent;
 
+        VkDevice _logical_device;
+
         /**
          * @brief Choose + return best swap surface format from the given choices of formats
          */
@@ -66,6 +68,11 @@ namespace VKGame::Renderer {
             const uint32_t &window_width,
             const uint32_t &window_height
         );
+
+        /**
+         * @brief Create and return image views for images in the swapchain
+         */
+        std::vector<VkImageView> CreateImageViews();
 
         /**
          * @brief Get vk swapchain object

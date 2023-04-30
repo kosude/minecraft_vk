@@ -13,6 +13,9 @@
 
 #include <vector>
 #include <iostream>
+#include <memory>
+
+#include "renderer/graphics_pipeline.hpp"
 
 namespace VKGame::Renderer {
     class Window;
@@ -37,8 +40,12 @@ namespace VKGame::Renderer {
 
         VkSwapchainKHR _main_swapchain;
         std::vector<VkImage> _main_swapchain_images;
+        std::vector<VkImageView> _main_swapchain_image_views;
         VkFormat _main_swapchain_image_format;
         VkExtent2D _main_swapchain_extent;
+
+        // using a smart ptr to initialise this member later on in the constructor instead of straight away
+        std::unique_ptr<GraphicsPipeline> _graphics_pipeline;
 
         void _CreateInstance( // also creates a debug messenger if in debug config
             VkInstance *instance
