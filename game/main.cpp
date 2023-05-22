@@ -10,7 +10,7 @@
 #include "game/game.hpp"
 #include "utils/log.hpp"
 
-using namespace VKGame;
+using namespace MCVK;
 
 int main() {
     Game::Game game;

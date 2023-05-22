@@ -14,7 +14,7 @@
 #include <vector>
 #include <optional>
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     /**
      * @brief Struct containing queue family indices. Expanded as needed -- -1 means not found.
      */

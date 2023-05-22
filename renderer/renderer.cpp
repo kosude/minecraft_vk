@@ -42,20 +42,20 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverit
     // redirect to appropriate logging function based on severity
     switch (severity) {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            VKGame::Utils::Warn(type_str + ": " + data->pMessage);
+            MCVK::Utils::Warn(type_str + ": " + data->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            VKGame::Utils::Error(type_str + ": " + data->pMessage, false);
+            MCVK::Utils::Error(type_str + ": " + data->pMessage, false);
             break;
         default:
-            VKGame::Utils::Log(type_str + ": " + data->pMessage);
+            MCVK::Utils::Log(type_str + ": " + data->pMessage);
             break;
     }
 
     return VK_FALSE;
 }
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     void Renderer::_CreateInstance(VkInstance *instance) {
         VkInstanceCreateInfo instance_create_info = {};
 
@@ -166,6 +166,11 @@ namespace VKGame::Renderer {
         // 0 is used as the queue index as there is only one queue created for each family.
         vkGetDeviceQueue(*device, queue_family_info.graphics_family_index.value(), 0, &_graphics_queue);
         vkGetDeviceQueue(*device, queue_family_info.present_family_index.value(), 0, &_present_queue);
+    }
+
+    // TODO: left off here
+    void Renderer::_CreateFramebuffers() {
+
     }
 
     Renderer::Renderer(const Window &main_window) {

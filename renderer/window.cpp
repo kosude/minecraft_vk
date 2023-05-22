@@ -9,7 +9,7 @@
 
 #include "window.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     Window::Window(const uint32_t &width, const uint32_t &height, const std::string &title) {
         Utils::Note("Creating window");
 

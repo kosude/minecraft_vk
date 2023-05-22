@@ -10,7 +10,7 @@
 
 #include "graphics_pipeline.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     VkShaderModule GraphicsPipeline::_CreateShaderModule(const std::vector<char> &code) {
         VkShaderModuleCreateInfo info = {};
 

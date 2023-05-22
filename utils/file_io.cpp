@@ -11,7 +11,7 @@
 
 #include <fstream>
 
-namespace VKGame::Utils {
+namespace MCVK::Utils {
     std::vector<char> ReadBinaryFile(const std::string &filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 

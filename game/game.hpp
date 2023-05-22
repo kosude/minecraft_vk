@@ -12,7 +12,7 @@
 #include "renderer/renderer.hpp"
 #include "renderer/window.hpp"
 
-namespace VKGame::Game {
+namespace MCVK::Game {
     /**
      * @brief Game application class
      */

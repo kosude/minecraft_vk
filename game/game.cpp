@@ -11,8 +11,12 @@
 
 #include "game.hpp"
 
-namespace VKGame::Game {
-    Game::Game() : _main_window(640, 480, "VKGame"), _renderer(_main_window) {
+#define GAME_WINDOW_WIDTH 640
+#define GAME_WINDOW_HEIGHT 480
+#define GAME_WINDOW_TITLE "Minecraft Vulkan"
+
+namespace MCVK::Game {
+    Game::Game() : _main_window(GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT, GAME_WINDOW_TITLE), _renderer(_main_window) {
         Utils::Note("Initialising game");
     }
 

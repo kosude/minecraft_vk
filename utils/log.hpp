@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-namespace VKGame::Utils {
+namespace MCVK::Utils {
     /**
      * @brief Log a message to stdout
      *

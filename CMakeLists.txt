@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-project("VKGame")
+project("minecraftvk")
+
+set(GAME_TARGET "game")
 
 set(SOURCES
     "game/game.cpp"                         "game/game.hpp"
@@ -17,24 +19,24 @@ set(SOURCES
     "utils/file_io.cpp"                     "utils/file_io.hpp"
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${GAME_TARGET} ${SOURCES})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE "DEBUG")
+    target_compile_definitions(${GAME_TARGET} PRIVATE "DEBUG")
 endif()
 
 set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${DEPS_DIR})
+target_include_directories(${GAME_TARGET} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${DEPS_DIR})
 
 add_subdirectory("${DEPS_DIR}/cutils")
-target_link_libraries(${PROJECT_NAME} clist cio)
+target_link_libraries(${GAME_TARGET} clist cio)
 
 add_subdirectory("${DEPS_DIR}/glfw")
-target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${GAME_TARGET} glfw)
 
 find_package(Vulkan REQUIRED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+target_include_directories(${GAME_TARGET} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${GAME_TARGET} ${Vulkan_LIBRARIES})
 
 if (WIN32)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
@@ -46,7 +48,7 @@ elseif (UNIX)
 endif()
 
 add_subdirectory("${DEPS_DIR}/volk")
-target_link_libraries(${PROJECT_NAME} volk)
+target_link_libraries(${GAME_TARGET} volk)
 
 set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/renderer/shaders")
 set(SHADER_SOURCES
@@ -72,4 +74,4 @@ foreach(SHADER ${SHADER_SOURCES})
 endforeach()
 
 add_custom_target(shaders_spv ALL DEPENDS "${CMAKE_CURRENT_LIST_DIR}/spv/" ${SPV_SHADERS})
-add_dependencies(${PROJECT_NAME} shaders_spv)
+add_dependencies(${GAME_TARGET} shaders_spv)

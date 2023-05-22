@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     /**
      * @brief Struct containing capability and support info for a swapchain
      */

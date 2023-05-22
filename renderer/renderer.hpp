@@ -17,7 +17,7 @@
 
 #include "renderer/graphics_pipeline.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     class Window;
 
     /**
@@ -44,6 +44,8 @@ namespace VKGame::Renderer {
         VkFormat _main_swapchain_image_format;
         VkExtent2D _main_swapchain_extent;
 
+        std::vector<VkFramebuffer> _main_swapchain_framebuffers;
+
         // using a smart ptr to initialise this member later on in the constructor instead of straight away
         std::unique_ptr<GraphicsPipeline> _graphics_pipeline;
 
@@ -57,6 +59,7 @@ namespace VKGame::Renderer {
         void _CreateLogicalDevice( // also retrieves queue handles
             VkDevice *device
         );
+        void _CreateFramebuffers();
 
     public:
         /**

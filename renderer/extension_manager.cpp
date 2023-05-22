@@ -13,7 +13,7 @@
 
 #include "extension_manager.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     std::vector<const char *> ExtensionManager::GetRequiredLayers() {
         std::vector<const char *> required_layers = {
 #           ifdef DEBUG
@@ -72,10 +72,10 @@ namespace VKGame::Renderer {
             if (std::find(supported_layer_names.begin(), supported_layer_names.end(), l) == supported_layer_names.end()) {
                 switch (importance) {
                     case ExtensionImportance::Required:
-                        VKGame::Utils::Error(std::string{"Required Vulkan layer "} + l + " not found or supported");
+                        MCVK::Utils::Error(std::string{"Required Vulkan layer "} + l + " not found or supported");
                         break;
                     case ExtensionImportance::Optional:
-                        VKGame::Utils::Warn(std::string{"Vulkan layer "} + l + " not found or supported");
+                        MCVK::Utils::Warn(std::string{"Vulkan layer "} + l + " not found or supported");
                         break;
                 }
 
@@ -102,10 +102,10 @@ namespace VKGame::Renderer {
             if (std::find(supported_ext_names.begin(), supported_ext_names.end(), e) == supported_ext_names.end()) {
                 switch (importance) {
                     case ExtensionImportance::Required:
-                        VKGame::Utils::Error(std::string{"Required Vulkan instance extension "} + e + " not found or supported");
+                        MCVK::Utils::Error(std::string{"Required Vulkan instance extension "} + e + " not found or supported");
                         break;
                     case ExtensionImportance::Optional:
-                        VKGame::Utils::Warn(std::string{"Vulkan instance extension "} + e + " not found or supported");
+                        MCVK::Utils::Warn(std::string{"Vulkan instance extension "} + e + " not found or supported");
                         break;
                 }
 
@@ -134,10 +134,10 @@ namespace VKGame::Renderer {
             if (std::find(supported_ext_names.begin(), supported_ext_names.end(), e) == supported_ext_names.end()) {
                 switch (importance) {
                     case ExtensionImportance::Required:
-                        VKGame::Utils::Error(std::string{"Required Vulkan device extension "} + e + " not found or supported");
+                        MCVK::Utils::Error(std::string{"Required Vulkan device extension "} + e + " not found or supported");
                         break;
                     case ExtensionImportance::Optional:
-                        VKGame::Utils::Warn(std::string{"Vulkan device extension "} + e + " not found or supported");
+                        MCVK::Utils::Warn(std::string{"Vulkan device extension "} + e + " not found or supported");
                         break;
                 }
 

@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     /**
      * @brief Enum of available extension importances
      */

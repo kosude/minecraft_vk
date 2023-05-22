@@ -38,7 +38,7 @@ static std::string __GetCurrentDateTime(const bool &with_time) {
     throw std::runtime_error("Date/time get failed");
 }
 
-namespace VKGame::Utils {
+namespace MCVK::Utils {
     void Log(const std::string &msg) {
         // verbose messages not shown in release
 #       ifdef DEBUG

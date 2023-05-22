@@ -18,7 +18,7 @@
 // Note that 'state' and 'stage' are often used interchangeably which is dumb and wrong, but I'm quite lazy and can't be bothered to fix this.
 // This could be a result of my inability to read.
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     /**
      * @brief Vulkan graphics pipeline
      */

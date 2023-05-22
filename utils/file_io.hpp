@@ -12,7 +12,7 @@
 #include <iostream>
 #include <vector>
 
-namespace VKGame::Utils {
+namespace MCVK::Utils {
     /**
      * @brief Read binary file from filename
      */

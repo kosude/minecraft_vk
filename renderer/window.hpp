@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     /**
      * @brief Window class built on GLFW
      */

@@ -13,7 +13,7 @@
 
 #include "swap_chain.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     VkSurfaceFormatKHR Swapchain::_GetOptimalSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &choices) {
         // use sRGB if available
         for (const VkSurfaceFormatKHR &c : choices) {

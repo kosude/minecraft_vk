@@ -13,7 +13,7 @@
 
 #include "device_manager.hpp"
 
-namespace VKGame::Renderer {
+namespace MCVK::Renderer {
     DeviceQueueFamilyInfo DeviceManager::GetDeviceQueueFamilyInfo(const VkPhysicalDevice &physical_device, const VkSurfaceKHR &surface) {
         DeviceQueueFamilyInfo info = {};
 
