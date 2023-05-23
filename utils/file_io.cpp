@@ -16,7 +16,7 @@ namespace MCVK::Utils {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            Utils::Error("Filesystem io error");
+            Utils::Error("Filesystem io error (reading from path " + filename + ")");
         }
 
         size_t file_size = (size_t) file.tellg();

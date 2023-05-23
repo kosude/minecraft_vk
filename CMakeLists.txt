@@ -57,21 +57,21 @@ set(SHADER_SOURCES
 )
 
 add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_LIST_DIR}/spv/"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_LIST_DIR}/spv/"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/spv/"
 )
 
 foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_FILENAME ${SHADER} NAME)
     add_custom_command(
-        OUTPUT "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv"
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
         DEPENDS ${SHADER}
         COMMENT "Building SPIR-V object from ${SHADER_FILENAME}"
     )
 
-    list(APPEND SPV_SHADERS "${CMAKE_CURRENT_LIST_DIR}/spv/${SHADER_FILENAME}.spv")
+    list(APPEND SPV_SHADERS "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv")
 endforeach()
 
-add_custom_target(shaders_spv ALL DEPENDS "${CMAKE_CURRENT_LIST_DIR}/spv/" ${SPV_SHADERS})
+add_custom_target(shaders_spv ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/spv/" ${SPV_SHADERS})
 add_dependencies(${GAME_TARGET} shaders_spv)
