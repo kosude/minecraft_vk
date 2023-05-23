@@ -30,13 +30,15 @@ namespace MCVK::Game {
     }
 
     void Game::Run() {
-        Utils::Note("Thank you for playing! ^-^");
-
         while (true) {
             // exit when main window closes
             if (!_main_window.Update()) {
                 break;
             }
+
+            _renderer.Draw();
         }
+
+        _renderer.DeviceWaitIdle();
     }
 }

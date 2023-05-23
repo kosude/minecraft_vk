@@ -19,6 +19,8 @@
 
 #include "renderer.hpp"
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
     const VkDebugUtilsMessengerCallbackDataEXT *data, void *user
 ) {
@@ -210,14 +212,16 @@ namespace MCVK::Renderer {
     }
 
     void Renderer::_CreateCommandBuffers(const VkDevice &device) {
+        _draw_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+
         // command buffers for draw operations
         VkCommandBufferAllocateInfo draw_info = {};
         draw_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         draw_info.commandPool = _draw_command_pool;
-        draw_info.commandBufferCount = 1;
+        draw_info.commandBufferCount = _draw_command_buffers.size();
         draw_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-        if (vkAllocateCommandBuffers(device, &draw_info, &_draw_command_buffer)) {
+        if (vkAllocateCommandBuffers(device, &draw_info, _draw_command_buffers.data())) {
             Utils::Error("Failed to create Vulkan render operations command buffers");
         }
     }
@@ -226,7 +230,7 @@ namespace MCVK::Renderer {
         VkCommandBufferBeginInfo begin_info = {};
         begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-        if (vkBeginCommandBuffer(_draw_command_buffer, &begin_info)) {
+        if (vkBeginCommandBuffer(_draw_command_buffers[_current_frame], &begin_info)) {
             Utils::Error("Failed to begin recording draw operations to Vulkan command buffer");
         }
 
@@ -245,10 +249,10 @@ namespace MCVK::Renderer {
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_colour;
 
-        vkCmdBeginRenderPass(_draw_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(_draw_command_buffers[_current_frame], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
         // bind graphics pipeline
-        vkCmdBindPipeline(_draw_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline->_handle);
+        vkCmdBindPipeline(_draw_command_buffers[_current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline->_handle);
 
         // set dynamic state: viewport
         VkViewport viewport = {};
@@ -258,23 +262,46 @@ namespace MCVK::Renderer {
         viewport.height = static_cast<float>(_main_swapchain_extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(_draw_command_buffer, 0, 1, &viewport);
+        vkCmdSetViewport(_draw_command_buffers[_current_frame], 0, 1, &viewport);
 
         // set dynamic state: scissor
         VkRect2D scissor = {};
         scissor.offset = { 0, 0 };
         scissor.extent = _main_swapchain_extent;
-        vkCmdSetScissor(_draw_command_buffer, 0, 1, &scissor);
+        vkCmdSetScissor(_draw_command_buffers[_current_frame], 0, 1, &scissor);
 
         // issue draw call (for triangle)
-        vkCmdDraw(_draw_command_buffer, 3, 1, 0, 0);
+        vkCmdDraw(_draw_command_buffers[_current_frame], 3, 1, 0, 0);
 
         // end render pass
-        vkCmdEndRenderPass(_draw_command_buffer);
+        vkCmdEndRenderPass(_draw_command_buffers[_current_frame]);
 
         // finish recording operations
-        if (vkEndCommandBuffer(_draw_command_buffer)) {
+        if (vkEndCommandBuffer(_draw_command_buffers[_current_frame])) {
             Utils::Error("Failed to record draw operations to Vulkan command buffer");
+        }
+    }
+
+    void Renderer::_CreateSynchronisationObjects(const VkDevice &device) {
+        VkSemaphoreCreateInfo semaphore_info = {};
+        semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fence_info = {};
+        fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        _image_available_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        _render_complete_sempahores.resize(MAX_FRAMES_IN_FLIGHT);
+        _in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            if (
+                vkCreateSemaphore(device, &semaphore_info, nullptr, &_image_available_semaphores[i]) ||
+                vkCreateSemaphore(device, &semaphore_info, nullptr, &_render_complete_sempahores[i]) ||
+                vkCreateFence(device, &fence_info, nullptr, &_in_flight_fences[i]))
+            {
+                Utils::Error("Failed to create Vulkan synchronisation primitives");
+            }
         }
     }
 
@@ -322,6 +349,9 @@ namespace MCVK::Renderer {
         // create command pool(s) and their buffer(s)
         _CreateCommandPools(_device, _physical_device, _main_surface);
         _CreateCommandBuffers(_device);
+
+        // create synchronisation primitives
+        _CreateSynchronisationObjects(_device);
     }
 
     void Renderer::Destroy() {
@@ -343,10 +373,76 @@ namespace MCVK::Renderer {
 
         vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
 
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroySemaphore(_device, _image_available_semaphores[i], nullptr);
+            vkDestroySemaphore(_device, _render_complete_sempahores[i], nullptr);
+            vkDestroyFence(_device, _in_flight_fences[i], nullptr);
+        }
+
         vkDestroyCommandPool(_device, _draw_command_pool, nullptr);
 
         vkDestroyDevice(_device, nullptr);
         vkDestroySurfaceKHR(_instance, _main_surface, nullptr);
         vkDestroyInstance(_instance, nullptr);
+    }
+
+    void Renderer::Draw() {
+        // wait for and reset fence indicating this frame can be rendered
+        vkWaitForFences(_device, 1, &_in_flight_fences[_current_frame], VK_TRUE, UINT64_MAX);
+        vkResetFences(_device, 1, &_in_flight_fences[_current_frame]);
+
+        // get image to render to
+        uint32_t image_index;
+        vkAcquireNextImageKHR(_device, _main_swapchain, UINT64_MAX, _image_available_semaphores[_current_frame], VK_NULL_HANDLE, &image_index);
+
+        // record draw operations to the command buffer
+        vkResetCommandBuffer(_draw_command_buffers[_current_frame], 0);
+        _RecordDrawCommandBuffer(image_index);
+
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        // wait for _image_available_semaphore before writing to the colour attachment.
+        VkSemaphore wait_semaphores[] = { _image_available_semaphores[_current_frame] };
+        VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = wait_semaphores;
+        submit_info.pWaitDstStageMask = wait_stages;
+
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &_draw_command_buffers[_current_frame];
+
+        // signal render complete semaphore when command buffer(s) are complete
+        VkSemaphore signal_semaphores[] = { _render_complete_sempahores[_current_frame] };
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = signal_semaphores;
+
+        // _in_flight_fence signalled when command buffer(s) are complete
+        if (vkQueueSubmit(_graphics_queue, 1, &submit_info, _in_flight_fences[_current_frame])) {
+            Utils::Error("Failed to submit Vulkan draw operations to GPU");
+        }
+
+        // submit render result back to swapchain to eventually present it
+        VkPresentInfoKHR present_info = {};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        // wait for render completeness
+        present_info.waitSemaphoreCount = 1;
+        present_info.pWaitSemaphores = signal_semaphores;
+
+        // specify swapchains to present to and the index of the image for each swapchain
+        VkSwapchainKHR swapchains[] = { _main_swapchain };
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = swapchains;
+        present_info.pImageIndices = &image_index;
+
+        // submit present request to the presentation queue
+        vkQueuePresentKHR(_present_queue, &present_info);
+
+        _current_frame = (_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void Renderer::DeviceWaitIdle() {
+        vkDeviceWaitIdle(_device);
     }
 }

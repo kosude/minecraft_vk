@@ -49,7 +49,13 @@ namespace MCVK::Renderer {
         std::unique_ptr<GraphicsPipeline> _graphics_pipeline;
 
         VkCommandPool _draw_command_pool;
-        VkCommandBuffer _draw_command_buffer;
+        std::vector<VkCommandBuffer> _draw_command_buffers;
+
+        std::vector<VkSemaphore> _image_available_semaphores;
+        std::vector<VkSemaphore> _render_complete_sempahores;
+        std::vector<VkFence> _in_flight_fences;
+
+        uint32_t _current_frame = 0;
 
         void _CreateInstance( // also creates a debug messenger if in debug config
             VkInstance *instance
@@ -75,6 +81,9 @@ namespace MCVK::Renderer {
         void _RecordDrawCommandBuffer( // framebuffer_index = the framebuffer that we want to write to (equal to swapchain image views)
             const uint32_t &framebuffer_index
         );
+        void _CreateSynchronisationObjects(
+            const VkDevice &device
+        );
     public:
         /**
          * @brief Construct a new game renderer
@@ -89,6 +98,13 @@ namespace MCVK::Renderer {
          * @brief Destroy the game renderer -- clean up Vulkan objects, etc.
          */
         void Destroy();
+
+        void Draw();
+
+        /**
+         * @brief Wait for renderer device(s) to be idle.
+         */
+        void DeviceWaitIdle();
     };
 }
 

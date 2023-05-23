@@ -193,6 +193,17 @@ namespace MCVK::Renderer {
         // index of colour attachment is referenced by layout(location = 0) directive in fragment shaders
         subpass.pColorAttachments = &colour_attachment_ref;
 
+        // subpass dependency to wait for colour attachemnt thus wait for an image to be available to render to
+        VkSubpassDependency subpass_dependency = {};
+        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependency.dstSubpass = 0;
+
+        // wait for swapchain to finish reading from the image before accessing it
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
         VkRenderPassCreateInfo render_pass_info = {};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 
@@ -200,6 +211,8 @@ namespace MCVK::Renderer {
         render_pass_info.pAttachments = &colour_attachment;
         render_pass_info.subpassCount = 1;
         render_pass_info.pSubpasses = &subpass;
+        render_pass_info.dependencyCount = 1;
+        render_pass_info.pDependencies = &subpass_dependency;
 
         if (vkCreateRenderPass(_logical_device, &render_pass_info, nullptr, &_render_pass)) {
             Utils::Error("Failed to create render pass");
