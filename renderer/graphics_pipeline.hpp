@@ -24,6 +24,8 @@ namespace MCVK::Renderer {
      */
     class GraphicsPipeline {
     private:
+        friend class Renderer;
+
         VkPipeline _handle;
 
         VkDevice _logical_device;

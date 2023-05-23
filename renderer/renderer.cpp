@@ -168,9 +168,114 @@ namespace MCVK::Renderer {
         vkGetDeviceQueue(*device, queue_family_info.present_family_index.value(), 0, &_present_queue);
     }
 
-    // TODO: left off here
-    void Renderer::_CreateFramebuffers() {
+    void Renderer::_CreateFramebuffers(const VkDevice &device) {
+        _main_swapchain_framebuffers.resize(_main_swapchain_image_views.size());
 
+        // create a framebuffer for each image view
+        for (uint32_t i = 0; i < _main_swapchain_image_views.size(); i++) {
+            VkImageView attachments[] = {
+                _main_swapchain_image_views[i]
+            };
+
+            VkFramebufferCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+
+            info.renderPass = _graphics_pipeline->_render_pass;
+
+            info.attachmentCount = 1;
+            info.pAttachments = attachments;
+
+            info.width = _main_swapchain_extent.width;
+            info.height = _main_swapchain_extent.height;
+
+            info.layers = 1;
+
+            if (vkCreateFramebuffer(device, &info, nullptr, &_main_swapchain_framebuffers[i])) {
+                Utils::Error("Failed to create Vulkan framebuffer");
+            }
+        }
+    }
+
+    void Renderer::_CreateCommandPools(const VkDevice &device, const VkPhysicalDevice &physical_device, const VkSurfaceKHR &surface) {
+        DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(physical_device, surface);
+
+        VkCommandPoolCreateInfo draw_info = {};
+        draw_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        draw_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        draw_info.queueFamilyIndex = queue_family_info.graphics_family_index.value();
+
+        if (vkCreateCommandPool(device, &draw_info, nullptr, &_draw_command_pool)) {
+            Utils::Error("Failed to create Vulkan render operations command pool");
+        }
+    }
+
+    void Renderer::_CreateCommandBuffers(const VkDevice &device) {
+        // command buffers for draw operations
+        VkCommandBufferAllocateInfo draw_info = {};
+        draw_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        draw_info.commandPool = _draw_command_pool;
+        draw_info.commandBufferCount = 1;
+        draw_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+        if (vkAllocateCommandBuffers(device, &draw_info, &_draw_command_buffer)) {
+            Utils::Error("Failed to create Vulkan render operations command buffers");
+        }
+    }
+
+    void Renderer::_RecordDrawCommandBuffer(const uint32_t &framebuffer_index) {
+        VkCommandBufferBeginInfo begin_info = {};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        if (vkBeginCommandBuffer(_draw_command_buffer, &begin_info)) {
+            Utils::Error("Failed to begin recording draw operations to Vulkan command buffer");
+        }
+
+        // start a render pass
+        VkRenderPassBeginInfo render_pass_info = {};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+
+        render_pass_info.renderPass = _graphics_pipeline->_render_pass;
+        render_pass_info.framebuffer = _main_swapchain_framebuffers[framebuffer_index];
+
+        render_pass_info.renderArea.offset = { 0, 0 };
+        render_pass_info.renderArea.extent = _main_swapchain_extent;
+
+        // clear the screen to a specified colour
+        VkClearValue clear_colour = {{{ 0.0f, 0.0f, 0.0f, 1.0f }}};
+        render_pass_info.clearValueCount = 1;
+        render_pass_info.pClearValues = &clear_colour;
+
+        vkCmdBeginRenderPass(_draw_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        // bind graphics pipeline
+        vkCmdBindPipeline(_draw_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline->_handle);
+
+        // set dynamic state: viewport
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(_main_swapchain_extent.width);
+        viewport.height = static_cast<float>(_main_swapchain_extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(_draw_command_buffer, 0, 1, &viewport);
+
+        // set dynamic state: scissor
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = _main_swapchain_extent;
+        vkCmdSetScissor(_draw_command_buffer, 0, 1, &scissor);
+
+        // issue draw call (for triangle)
+        vkCmdDraw(_draw_command_buffer, 3, 1, 0, 0);
+
+        // end render pass
+        vkCmdEndRenderPass(_draw_command_buffer);
+
+        // finish recording operations
+        if (vkEndCommandBuffer(_draw_command_buffer)) {
+            Utils::Error("Failed to record draw operations to Vulkan command buffer");
+        }
     }
 
     Renderer::Renderer(const Window &main_window) {
@@ -210,6 +315,13 @@ namespace MCVK::Renderer {
 
         // create graphics pipeline
         _graphics_pipeline = std::unique_ptr<GraphicsPipeline>(new GraphicsPipeline(_device, swapchain_cl));
+
+        // create framebuffers
+        _CreateFramebuffers(_device);
+
+        // create command pool(s) and their buffer(s)
+        _CreateCommandPools(_device, _physical_device, _main_surface);
+        _CreateCommandBuffers(_device);
     }
 
     void Renderer::Destroy() {
@@ -219,6 +331,10 @@ namespace MCVK::Renderer {
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 #       endif
 
+        for (VkFramebuffer fb : _main_swapchain_framebuffers) {
+            vkDestroyFramebuffer(_device, fb, nullptr);
+        }
+
         for (VkImageView view : _main_swapchain_image_views) {
             vkDestroyImageView(_device, view, nullptr);
         }
@@ -226,6 +342,8 @@ namespace MCVK::Renderer {
         _graphics_pipeline->Destroy();
 
         vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
+
+        vkDestroyCommandPool(_device, _draw_command_pool, nullptr);
 
         vkDestroyDevice(_device, nullptr);
         vkDestroySurfaceKHR(_instance, _main_surface, nullptr);
