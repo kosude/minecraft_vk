@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project("minecraftvk")
 
 set(GAME_TARGET "game")
+set(GAME_TARGET_DEFINITIONS)
 
 set(SOURCES
     "game/game.cpp"                         "game/game.hpp"
@@ -19,10 +20,13 @@ set(SOURCES
     "utils/file_io.cpp"                     "utils/file_io.hpp"
 )
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_executable(${GAME_TARGET} ${SOURCES})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(${GAME_TARGET} PRIVATE "DEBUG")
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "DEBUG")
 endif()
 
 set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
@@ -40,15 +44,20 @@ target_link_libraries(${GAME_TARGET} ${Vulkan_LIBRARIES})
 
 if (WIN32)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} WIN32)
 elseif (APPLE)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_MACOS_MVK)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} APPLE)
 elseif (UNIX)
     # will likely work on most unix machines
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_XLIB_KHR)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} UNIX)
 endif()
 
 add_subdirectory("${DEPS_DIR}/volk")
 target_link_libraries(${GAME_TARGET} volk)
+
+target_compile_definitions(${GAME_TARGET} PRIVATE ${GAME_TARGET_DEFINITIONS})
 
 set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/renderer/shaders")
 set(SHADER_SOURCES

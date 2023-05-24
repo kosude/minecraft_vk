@@ -26,7 +26,10 @@ namespace MCVK::Renderer {
 
     std::vector<const char *> ExtensionManager::GetRequiredInstanceExtensions() {
         std::vector<const char *> required_exts = {
-            VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+#           ifdef APPLE
+                VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+                "VK_KHR_get_physical_device_properties2",
+#           endif
 #           ifdef DEBUG
                 VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #           endif
@@ -44,6 +47,9 @@ namespace MCVK::Renderer {
 
     std::vector<const char *> ExtensionManager::GetRequiredDeviceExtensions() {
         std::vector<const char*> required_exts = {
+#           ifdef APPLE
+                "VK_KHR_portability_subset",
+#           endif
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
