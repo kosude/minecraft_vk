@@ -9,6 +9,10 @@ set(SOURCES
     "game/game.cpp"                         "game/game.hpp"
     "game/main.cpp"
 
+    "renderer/buffer/buffer.cpp"            "renderer/buffer/buffer.hpp"
+
+    "renderer/data/vertex.cpp"              "renderer/data/vertex.hpp"
+
     "renderer/device_manager.cpp"           "renderer/device_manager.hpp"
     "renderer/extension_manager.cpp"        "renderer/extension_manager.hpp"
     "renderer/graphics_pipeline.cpp"        "renderer/graphics_pipeline.hpp"
@@ -74,7 +78,7 @@ foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_FILENAME ${SHADER} NAME)
     add_custom_command(
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -g -o "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
         DEPENDS ${SHADER}
         COMMENT "Building SPIR-V object from ${SHADER_FILENAME}"
     )

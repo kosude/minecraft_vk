@@ -21,6 +21,17 @@
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
+// TODO: stop hardcoding in this file
+#include "data/vertex.hpp"
+const std::vector<MCVK::Renderer::Data::Vertex> vertices = {
+    { { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+    { {  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f } },
+    { { -0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } },
+    { { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+    { {  0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f } },
+    { {  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f } }
+};
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
     const VkDebugUtilsMessengerCallbackDataEXT *data, void *user
 ) {
@@ -75,7 +86,9 @@ namespace MCVK::Renderer {
         instance_create_info.enabledExtensionCount = enabled_exts.size();
         instance_create_info.ppEnabledExtensionNames = (const char *const *) enabled_exts.data();
 
-        instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#       ifdef APPLE
+            instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#       endif
 
         // debug messenger create info (if in debug mode) used for pNext of instance and separate messenger
 #       ifdef DEBUG
@@ -270,8 +283,14 @@ namespace MCVK::Renderer {
         scissor.extent = _main_swapchain_extent;
         vkCmdSetScissor(_draw_command_buffers[_current_frame], 0, 1, &scissor);
 
+        // TODO: don't hardcode in this file
+        // bind vertex buffer
+        VkBuffer vertex_buffers[] = { _vertex_buffer->GetObjectHandle() };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(_draw_command_buffers[_current_frame], 0, 1, vertex_buffers, offsets);
+
         // issue draw call (for triangle)
-        vkCmdDraw(_draw_command_buffers[_current_frame], 3, 1, 0, 0);
+        vkCmdDraw(_draw_command_buffers[_current_frame], vertices.size(), 1, 0, 0);
 
         // end render pass
         vkCmdEndRenderPass(_draw_command_buffers[_current_frame]);
@@ -352,6 +371,12 @@ namespace MCVK::Renderer {
 
         // create synchronisation primitives
         _CreateSynchronisationObjects(_device);
+
+        // TODO: stop hardcoding in this file
+        _vertex_buffer = std::unique_ptr<Buffer::Buffer>(new Buffer::Buffer(_device, _physical_device, sizeof(Data::Vertex) * vertices.size(),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+
+        _vertex_buffer->SetData((void *) vertices.data());
     }
 
     void Renderer::Destroy() {
@@ -372,6 +397,9 @@ namespace MCVK::Renderer {
         _graphics_pipeline->Destroy();
 
         vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
+
+        // TODO: stop hardcoding in this file
+        _vertex_buffer->Destroy();
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(_device, _image_available_semaphores[i], nullptr);

@@ -24,6 +24,9 @@ namespace MCVK::Renderer {
         std::optional<uint32_t> present_family_index = -1;
     };
 
+    /**
+     * @brief Class for managing Vulkan devices + physical devices
+     */
     class DeviceManager {
     public:
         /**

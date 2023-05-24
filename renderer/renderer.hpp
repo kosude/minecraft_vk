@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 
+#include "renderer/buffer/buffer.hpp"
 #include "renderer/graphics_pipeline.hpp"
 
 namespace MCVK::Renderer {
@@ -47,6 +48,9 @@ namespace MCVK::Renderer {
 
         // using a smart ptr to initialise this member later on in the constructor instead of straight away
         std::unique_ptr<GraphicsPipeline> _graphics_pipeline;
+
+        // TODO: stop hardcoding in this file
+        std::unique_ptr<Buffer::Buffer> _vertex_buffer;
 
         VkCommandPool _draw_command_pool;
         std::vector<VkCommandBuffer> _draw_command_buffers;
@@ -99,6 +103,9 @@ namespace MCVK::Renderer {
          */
         void Destroy();
 
+        /**
+         * @brief Draw function
+         */
         void Draw();
 
         /**

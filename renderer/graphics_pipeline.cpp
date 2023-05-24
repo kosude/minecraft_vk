@@ -7,6 +7,7 @@
 
 #include "utils/log.hpp"
 #include "utils/file_io.hpp"
+#include "renderer/data/vertex.hpp"
 
 #include "graphics_pipeline.hpp"
 
@@ -71,11 +72,6 @@ namespace MCVK::Renderer {
         _vertex_input_stage_info = {};
 
         _vertex_input_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-        _vertex_input_stage_info.vertexBindingDescriptionCount = 0;
-        _vertex_input_stage_info.pVertexBindingDescriptions = nullptr;
-        _vertex_input_stage_info.vertexAttributeDescriptionCount = 0;
-        _vertex_input_stage_info.pVertexAttributeDescriptions = 0;
     }
 
     void GraphicsPipeline::_CreateInputAssemblyStage() {
@@ -241,6 +237,16 @@ namespace MCVK::Renderer {
 
         info.stageCount = 2;
         info.pStages = _shader_stage_info_arr.data();
+
+        // vertex input binding description(s)
+        auto binding_description = Data::Vertex::GetBindingDescription();
+        _vertex_input_stage_info.vertexBindingDescriptionCount = 1;
+        _vertex_input_stage_info.pVertexBindingDescriptions = &binding_description;
+
+        // vertex input attribute description(s)
+        auto attribute_descriptions = Data::Vertex::GetAttributeDescriptions();
+        _vertex_input_stage_info.vertexAttributeDescriptionCount = attribute_descriptions.size();
+        _vertex_input_stage_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 
         info.pVertexInputState = &_vertex_input_stage_info;
         info.pInputAssemblyState = &_input_assembly_stage_info;
