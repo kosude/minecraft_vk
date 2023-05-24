@@ -10,7 +10,7 @@
 #define __data__vertex_hpp
 
 #include <volk/volk.h>
-#include <glm/glm.hpp>
+#include <glm/glm/glm.hpp>
 
 #include <array>
 
