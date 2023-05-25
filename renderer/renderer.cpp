@@ -136,7 +136,9 @@ namespace MCVK::Renderer {
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
         std::set<uint32_t> unique_queue_families = {
             queue_family_info.graphics_family_index.value(),
-            queue_family_info.present_family_index.value()
+            queue_family_info.present_family_index.value(),
+            queue_family_info.compute_family_index.value(),
+            queue_family_info.transfer_family_index.value()
         };
 
         float queue_priority = 1.0f;
