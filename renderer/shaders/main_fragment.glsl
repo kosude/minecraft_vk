@@ -2,10 +2,10 @@
 
 #pragma shader_stage(fragment)
 
-layout(location = 0) in vec3 in_vertex_colour;
+layout(location = 0) in vec3    i_VERTEX_COLOUR;
 
-layout(location = 0) out vec4 out_colour;
+layout(location = 0) out vec4   o_COLOUR;
 
 void main() {
-    out_colour = vec4(in_vertex_colour, 1.0);
+    o_COLOUR = vec4(i_VERTEX_COLOUR, 1.0);
 }
