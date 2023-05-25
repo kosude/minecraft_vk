@@ -6,16 +6,42 @@
  */
 
 #pragma once
-#ifndef __buffer__vertex_buffer_hpp
-#define __buffer__vertex_buffer_hpp
+#ifndef __buffer__buffer_hpp
+#define __buffer__buffer_hpp
 
+#include <vector>
 #include <volk/volk.h>
+
+struct DeviceQueueFamilyInfo;
 
 namespace MCVK::Renderer::Buffer {
     /**
      * @brief Basic buffer class
      */
     class Buffer {
+    private:
+        uint32_t _ChooseMemoryType(
+            const VkPhysicalDevice &physical_device,
+            const VkMemoryPropertyFlags &prop_flags,
+            const uint32_t &type_filter
+        );
+
+        void _CreateBuffer(
+            VkBuffer *buffer,
+            VkDeviceMemory *memory,
+            const VkBufferUsageFlags &usage,
+            const VkSharingMode &share_mode,
+            const std::vector<uint32_t> &queue_family_info,
+            const VkPhysicalDevice &physical_device,
+            const VkMemoryPropertyFlags &memory_properties
+        );
+
+        // submit transfer of data from staging buffer to device local memory
+        void _StageData(
+            const VkCommandPool &command_pool,
+            const VkQueue &queue
+        );
+
     protected:
         VkBuffer _handle;
         VkDeviceMemory _memory_handle;
@@ -24,11 +50,8 @@ namespace MCVK::Renderer::Buffer {
 
         size_t _size;
 
-        uint32_t _ChooseMemoryType(
-            const VkPhysicalDevice &physical_device,
-            const VkMemoryPropertyFlags &prop_flags,
-            const uint32_t &type_filter
-        );
+        VkBuffer _staging_buffer_handle;
+        VkDeviceMemory _staging_buffer_memory_handle;
 
     public:
         /**
@@ -39,8 +62,8 @@ namespace MCVK::Renderer::Buffer {
             const VkPhysicalDevice &physical_device,
             const size_t &size,
             const VkBufferUsageFlags &usage,
-            const VkMemoryPropertyFlags &memory_properties,
-            const VkSharingMode &share_mode = VK_SHARING_MODE_EXCLUSIVE
+            const VkSharingMode &share_mode,
+            const std::vector<uint32_t> &queue_family_info
         );
 
         /**
@@ -49,10 +72,12 @@ namespace MCVK::Renderer::Buffer {
         void Destroy();
 
         /**
-         * @brief Fill the buffer's memory with the given data
+         * @brief Fill the buffer's memory with the given data, memory transfer operations done on given command pool + queue
          */
         void SetData(
-            void *data
+            void *data,
+            const VkCommandPool &command_pool,
+            const VkQueue &queue
         );
 
         inline VkBuffer GetObjectHandle() const { return _handle; }

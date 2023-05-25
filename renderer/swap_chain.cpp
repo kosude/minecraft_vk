@@ -15,12 +15,12 @@
 
 namespace MCVK::Renderer {
     VkSurfaceFormatKHR Swapchain::_GetOptimalSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &choices) {
-        // use sRGB if available
-        for (const VkSurfaceFormatKHR &c : choices) {
-            if (c.format == VK_FORMAT_B8G8R8A8_SRGB && c.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                return c;
-            }
-        }
+        // NOTE: this is with sRGB preference assumed. This doesn't seem to be ideal as it forces all colour values to sRGB space which looks dumb.
+        // for (const VkSurfaceFormatKHR &c : choices) {
+        //     if (c.format == VK_FORMAT_B8G8R8A8_SRGB && c.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        //         return c;
+        //     }
+        // }
 
         // TODO: other available formats could be ranked in future
         return choices[0];

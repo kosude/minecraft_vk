@@ -23,10 +23,15 @@ namespace MCVK::Renderer {
         std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
         vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count, queue_families.data());
 
+        uint8_t min_transfer_score = 255;
         for (uint32_t i = 0; i < queue_family_count; i++) {
+            uint8_t cur_transfer_score = 0;
+
             // if graphics queue
-            if (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            if (info.graphics_family_index == -1 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 info.graphics_family_index = i;
+
+                cur_transfer_score++;
             }
 
             // if present support
@@ -34,6 +39,24 @@ namespace MCVK::Renderer {
             vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, surface, &present_support);
             if (present_support) {
                 info.present_family_index = i;
+
+                cur_transfer_score++;
+            }
+
+            // if compute queue
+            if (queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+                info.compute_family_index = i;
+
+                cur_transfer_score++;
+            }
+
+            // if transfer queue
+            if (queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) {
+                // try to find a dedicated transfer queue if possible
+                if (cur_transfer_score < min_transfer_score) {
+                    min_transfer_score = cur_transfer_score;
+                    info.transfer_family_index = i;
+                }
             }
         }
 

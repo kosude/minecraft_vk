@@ -25,11 +25,12 @@
 #include "data/vertex.hpp"
 const std::vector<MCVK::Renderer::Data::Vertex> vertices = {
     { { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
-    { {  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f } },
-    { { -0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } },
-    { { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
-    { {  0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f } },
-    { {  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f } }
+    { { -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f } },
+    { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } },
+    { {  0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } }
+};
+const std::vector<uint16_t> indices = {
+    0, 2, 1, 3, 2, 0
 };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
@@ -181,6 +182,7 @@ namespace MCVK::Renderer {
         // 0 is used as the queue index as there is only one queue created for each family.
         vkGetDeviceQueue(*device, queue_family_info.graphics_family_index.value(), 0, &_graphics_queue);
         vkGetDeviceQueue(*device, queue_family_info.present_family_index.value(), 0, &_present_queue);
+        vkGetDeviceQueue(*device, queue_family_info.transfer_family_index.value(), 0, &_transfer_queue);
     }
 
     void Renderer::_CreateFramebuffers(const VkDevice &device) {
@@ -214,13 +216,24 @@ namespace MCVK::Renderer {
     void Renderer::_CreateCommandPools(const VkDevice &device, const VkPhysicalDevice &physical_device, const VkSurfaceKHR &surface) {
         DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(physical_device, surface);
 
+        // draw command pool
+
         VkCommandPoolCreateInfo draw_info = {};
         draw_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         draw_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         draw_info.queueFamilyIndex = queue_family_info.graphics_family_index.value();
-
         if (vkCreateCommandPool(device, &draw_info, nullptr, &_draw_command_pool)) {
             Utils::Error("Failed to create Vulkan render operations command pool");
+        }
+
+        // transfer command pool
+
+        VkCommandPoolCreateInfo transfer_info = {};
+        transfer_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        transfer_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        transfer_info.queueFamilyIndex = queue_family_info.transfer_family_index.value();
+        if (vkCreateCommandPool(device, &transfer_info, nullptr, &_transfer_command_pool)) {
+            Utils::Error("Failed to create Vulkan memory transfer operations command pool");
         }
     }
 
@@ -228,6 +241,7 @@ namespace MCVK::Renderer {
         _draw_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 
         // command buffers for draw operations
+
         VkCommandBufferAllocateInfo draw_info = {};
         draw_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         draw_info.commandPool = _draw_command_pool;
@@ -258,7 +272,7 @@ namespace MCVK::Renderer {
         render_pass_info.renderArea.extent = _main_swapchain_extent;
 
         // clear the screen to a specified colour
-        VkClearValue clear_colour = {{{ 0.0f, 0.0f, 0.0f, 1.0f }}};
+        VkClearValue clear_colour = {{{ 0.2f, 0.3f, 0.3f, 1.0f }}};
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_colour;
 
@@ -288,9 +302,11 @@ namespace MCVK::Renderer {
         VkBuffer vertex_buffers[] = { _vertex_buffer->GetObjectHandle() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(_draw_command_buffers[_current_frame], 0, 1, vertex_buffers, offsets);
+        // bind index buffer
+        vkCmdBindIndexBuffer(_draw_command_buffers[_current_frame], _index_buffer->GetObjectHandle(), 0, VK_INDEX_TYPE_UINT16);
 
         // issue draw call (for triangle)
-        vkCmdDraw(_draw_command_buffers[_current_frame], vertices.size(), 1, 0, 0);
+        vkCmdDrawIndexed(_draw_command_buffers[_current_frame], indices.size(), 1, 0, 0, 0);
 
         // end render pass
         vkCmdEndRenderPass(_draw_command_buffers[_current_frame]);
@@ -373,10 +389,33 @@ namespace MCVK::Renderer {
         _CreateSynchronisationObjects(_device);
 
         // TODO: stop hardcoding in this file
-        _vertex_buffer = std::unique_ptr<Buffer::Buffer>(new Buffer::Buffer(_device, _physical_device, sizeof(Data::Vertex) * vertices.size(),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-
-        _vertex_buffer->SetData((void *) vertices.data());
+        DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(_physical_device, _main_surface);
+        _vertex_buffer = std::unique_ptr<Buffer::VertexBuffer>(
+            new Buffer::VertexBuffer(
+                _device,
+                _physical_device,
+                sizeof(Data::Vertex) * vertices.size(),
+                VK_SHARING_MODE_CONCURRENT,
+                {
+                    queue_family_info.graphics_family_index.value(),
+                    queue_family_info.transfer_family_index.value()
+                }
+            )
+        );
+        _vertex_buffer->SetData((void *) vertices.data(), _transfer_command_pool, _transfer_queue);
+        _index_buffer = std::unique_ptr<Buffer::IndexBuffer>(
+            new Buffer::IndexBuffer(
+                _device,
+                _physical_device,
+                sizeof(uint16_t) * indices.size(),
+                VK_SHARING_MODE_CONCURRENT,
+                {
+                    queue_family_info.graphics_family_index.value(),
+                    queue_family_info.transfer_family_index.value()
+                }
+            )
+        );
+        _index_buffer->SetData((void *) indices.data(), _transfer_command_pool, _transfer_queue);
     }
 
     void Renderer::Destroy() {
@@ -400,6 +439,7 @@ namespace MCVK::Renderer {
 
         // TODO: stop hardcoding in this file
         _vertex_buffer->Destroy();
+        _index_buffer->Destroy();
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(_device, _image_available_semaphores[i], nullptr);
@@ -408,6 +448,7 @@ namespace MCVK::Renderer {
         }
 
         vkDestroyCommandPool(_device, _draw_command_pool, nullptr);
+        vkDestroyCommandPool(_device, _transfer_command_pool, nullptr);
 
         vkDestroyDevice(_device, nullptr);
         vkDestroySurfaceKHR(_instance, _main_surface, nullptr);

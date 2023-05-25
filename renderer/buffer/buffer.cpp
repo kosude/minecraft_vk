@@ -30,23 +30,25 @@ namespace MCVK::Renderer::Buffer {
         return 0;
     }
 
-    Buffer::Buffer(const VkDevice &device, const VkPhysicalDevice &physical_device, const size_t &size, const VkBufferUsageFlags &usage,
-        const VkMemoryPropertyFlags &memory_properties, const VkSharingMode &share_mode) : _device(device), _size(size)
+    void Buffer::_CreateBuffer(VkBuffer *buffer, VkDeviceMemory *memory, const VkBufferUsageFlags &usage, const VkSharingMode &share_mode,
+        const std::vector<uint32_t> &queue_family_info, const VkPhysicalDevice &physical_device, const VkMemoryPropertyFlags &memory_properties)
     {
         VkBufferCreateInfo info = {};
 
         info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         info.size = _size;
-        info.usage = usage;
+        info.usage = usage ; // destination of memory transfers (from staging buffer)
         info.sharingMode = share_mode;
+        info.queueFamilyIndexCount = queue_family_info.size();
+        info.pQueueFamilyIndices = queue_family_info.data();
 
-        if (vkCreateBuffer(_device, &info, nullptr, &_handle)) {
-            Utils::Error("Failed to create generic buffer object");
+        if (vkCreateBuffer(_device, &info, nullptr, buffer)) {
+            Utils::Error("Failed to create buffer object");
         }
 
         // get memory space requirements for buffer + suitable types
         VkMemoryRequirements memory_reqs;
-        vkGetBufferMemoryRequirements(_device, _handle, &memory_reqs);
+        vkGetBufferMemoryRequirements(_device, *buffer, &memory_reqs);
 
         // allocate memory
         VkMemoryAllocateInfo memory_alloc_info = {};
@@ -54,32 +56,91 @@ namespace MCVK::Renderer::Buffer {
         memory_alloc_info.allocationSize = memory_reqs.size;
         memory_alloc_info.memoryTypeIndex = _ChooseMemoryType(physical_device, memory_properties, memory_reqs.memoryTypeBits);
 
-        if (vkAllocateMemory(_device, &memory_alloc_info, nullptr, &_memory_handle)) {
-            Utils::Error("Failed to allocate memory for generic buffer object");
+        if (vkAllocateMemory(_device, &memory_alloc_info, nullptr, memory)) {
+            Utils::Error("Failed to allocate memory for buffer object");
         }
 
         // bind this memory to the recently created buffer
-        if (vkBindBufferMemory(_device, _handle, _memory_handle, 0)) {
-            Utils::Error("Failed to bind allocated memory to generic buffer object");
+        vkBindBufferMemory(_device, *buffer, *memory, 0);
+    }
+
+    void Buffer::_StageData(const VkCommandPool &command_pool, const VkQueue &queue) {
+        VkCommandBufferAllocateInfo cmd_buffer_alloc_info = {};
+        cmd_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        cmd_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cmd_buffer_alloc_info.commandPool = command_pool;
+        cmd_buffer_alloc_info.commandBufferCount = 1;
+
+        // temporary command buffer
+        VkCommandBuffer command_buffer;
+        if (vkAllocateCommandBuffers(_device, &cmd_buffer_alloc_info, &command_buffer)) {
+            Utils::Error("Failed to allocate temporary memory transfer command buffer");
         }
+
+        // start recording command buffer
+        VkCommandBufferBeginInfo begin_info = {};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // tell driver that this command buffer is submitted once
+
+        if (vkBeginCommandBuffer(command_buffer, &begin_info)) {
+            Utils::Error("Failed to record operations to temporary memory transfer command buffer");
+        }
+
+        // transfer buffer contents
+        VkBufferCopy copy_region = {};
+        copy_region.size = _size;
+        vkCmdCopyBuffer(command_buffer, _staging_buffer_handle, _handle, 1, &copy_region);
+
+        // end operations recording
+        vkEndCommandBuffer(command_buffer);
+
+        // submit transfer commands
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &command_buffer;
+        vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+
+        // wait for transfer to complete on this queue
+        vkQueueWaitIdle(queue);
+
+        // free command buffer space
+        vkFreeCommandBuffers(_device, command_pool, 1, &command_buffer);
+    }
+
+    Buffer::Buffer(const VkDevice &device, const VkPhysicalDevice &physical_device, const size_t &size, const VkBufferUsageFlags &usage,
+        const VkSharingMode &share_mode, const std::vector<uint32_t> &queue_family_info)
+        : _device(device), _size(size)
+    {
+        // create host-visible staging buffer
+        _CreateBuffer(&_staging_buffer_handle, &_staging_buffer_memory_handle, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, share_mode, queue_family_info,
+            physical_device, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        // create device local buffer
+        _CreateBuffer(&_handle, &_memory_handle, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, share_mode, queue_family_info, physical_device,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
 
     void Buffer::Destroy() {
         vkDestroyBuffer(_device, _handle, nullptr);
         vkFreeMemory(_device, _memory_handle, nullptr);
+
+        vkDestroyBuffer(_device, _staging_buffer_handle, nullptr);
+        vkFreeMemory(_device, _staging_buffer_memory_handle, nullptr);
     }
 
-    void Buffer::SetData(void *data) {
+    void Buffer::SetData(void *data, const VkCommandPool &command_pool, const VkQueue &queue) {
         // pointer to buffer within host memory that will be mapped to the buffer's VRAM memory
         void *host_buffer;
 
-        if (vkMapMemory(_device, _memory_handle, 0, _size, 0, &host_buffer)) {
-            Utils::Error("Failed to map CPU memory to generic buffer object");
+        if (vkMapMemory(_device, _staging_buffer_memory_handle, 0, _size, 0, &host_buffer)) {
+            Utils::Error("Failed to map CPU memory to buffer object staging buffer");
         }
 
+        // copy data into mapped staging buffer
         memcpy(host_buffer, data, _size);
 
-        // unmap the host memory pointer
-        vkUnmapMemory(_device, _memory_handle);
+        // copy staging buffer data into device local memory buffer (_handle)
+        _StageData(command_pool, queue);
     }
 }

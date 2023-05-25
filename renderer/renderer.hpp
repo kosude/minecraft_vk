@@ -15,7 +15,8 @@
 #include <iostream>
 #include <memory>
 
-#include "renderer/buffer/buffer.hpp"
+#include "renderer/buffer/vertex_buffer.hpp"
+#include "renderer/buffer/index_buffer.hpp"
 #include "renderer/graphics_pipeline.hpp"
 
 namespace MCVK::Renderer {
@@ -32,6 +33,7 @@ namespace MCVK::Renderer {
         VkDevice _device;
         VkQueue _graphics_queue;
         VkQueue _present_queue;
+        VkQueue _transfer_queue;
 
 #       ifdef DEBUG
             VkDebugUtilsMessengerEXT _debug_messenger;
@@ -50,10 +52,12 @@ namespace MCVK::Renderer {
         std::unique_ptr<GraphicsPipeline> _graphics_pipeline;
 
         // TODO: stop hardcoding in this file
-        std::unique_ptr<Buffer::Buffer> _vertex_buffer;
+        std::unique_ptr<Buffer::VertexBuffer> _vertex_buffer;
+        std::unique_ptr<Buffer::IndexBuffer> _index_buffer;
 
         VkCommandPool _draw_command_pool;
         std::vector<VkCommandBuffer> _draw_command_buffers;
+        VkCommandPool _transfer_command_pool;
 
         std::vector<VkSemaphore> _image_available_semaphores;
         std::vector<VkSemaphore> _render_complete_sempahores;

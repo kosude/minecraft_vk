@@ -10,6 +10,8 @@ set(SOURCES
     "game/main.cpp"
 
     "renderer/buffer/buffer.cpp"            "renderer/buffer/buffer.hpp"
+    "renderer/buffer/vertex_buffer.cpp"     "renderer/buffer/vertex_buffer.hpp"
+    "renderer/buffer/index_buffer.cpp"      "renderer/buffer/index_buffer.hpp"
 
     "renderer/data/vertex.cpp"              "renderer/data/vertex.hpp"
 

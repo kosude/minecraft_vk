@@ -22,6 +22,8 @@ namespace MCVK::Renderer {
     public:
         std::optional<uint32_t> graphics_family_index = -1;
         std::optional<uint32_t> present_family_index = -1;
+        std::optional<uint32_t> compute_family_index = -1;
+        std::optional<uint32_t> transfer_family_index = -1;
     };
 
     /**
