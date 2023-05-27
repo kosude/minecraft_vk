@@ -81,13 +81,15 @@ static void _UpdateUniformBuffer(MCVK::Renderer::Buffer::UniformBuffer &ubo, uin
     auto udata = MCVK::Renderer::Data::Uniform();
 
     // rotate object around z axis
-    udata.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    udata.transform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-    udata.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    udata.proj = glm::perspective(glm::radians(45.0f), swapchain_extent.width / (float) swapchain_extent.height, 0.1f, 10.0f);
+    udata.transform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    udata.transform.proj = glm::perspective(glm::radians(45.0f), swapchain_extent.width / (float) swapchain_extent.height, 0.1f, 10.0f);
 
     // flip scale of y axis as glm was designed for opengl in which y coordinates are flipped relative to in vulkan
-    udata.proj[1][1] *= -1;
+    udata.transform.proj[1][1] *= -1;
+
+    udata.colour_multiplier = glm::abs(glm::sin(time));
 
     ubo.SetData(&udata, current_image);
 }
@@ -370,6 +372,15 @@ namespace MCVK::Renderer {
     }
 
     void Renderer::_RecreateSwapchain() {
+        int width, height;
+        glfwGetFramebufferSize(_main_window._handle, &width, &height);
+
+        // pause when window minimised
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(_main_window._handle, &width, &height);
+            glfwWaitEvents();
+        }
+
         DeviceWaitIdle();
 
         // clean up previous swapchain objects
@@ -380,10 +391,6 @@ namespace MCVK::Renderer {
             vkDestroyImageView(_device, view, nullptr);
         }
         vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
-
-        // create swapchain + store extra swap data
-        int width, height;
-        glfwGetFramebufferSize(_main_window._handle, &width, &height);
 
         // overwrite swapchain data
         Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);

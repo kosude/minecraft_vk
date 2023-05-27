@@ -17,9 +17,16 @@ namespace MCVK::Renderer::Data {
      */
     struct Uniform {
     public:
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 proj;
+        // align memory based on vulkan alignment expectations:
+        // https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap15.html#interfaces-resources-layout
+
+        alignas(4) float colour_multiplier;
+
+        struct {
+            alignas(16) glm::mat4 model;
+            alignas(16) glm::mat4 view;
+            alignas(16) glm::mat4 proj;
+        } transform;
     };
 }
 
