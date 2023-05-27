@@ -17,11 +17,14 @@
 
 #include "renderer/buffer/vertex_buffer.hpp"
 #include "renderer/buffer/index_buffer.hpp"
+#include "renderer/buffer/uniform_buffer.hpp"
 #include "renderer/graphics_pipeline.hpp"
 
-namespace MCVK::Renderer {
-    class Window;
+#define GLFW_INCLUDE_VULKAN
+#define VK_NO_PROTOTYPES
+#include "renderer/window.hpp"
 
+namespace MCVK::Renderer {
     /**
      * @brief Game renderer (Vulkan)
      */
@@ -39,6 +42,7 @@ namespace MCVK::Renderer {
             VkDebugUtilsMessengerEXT _debug_messenger;
 #       endif
 
+        Window &_main_window;
         VkSurfaceKHR _main_surface;
 
         VkSwapchainKHR _main_swapchain;
@@ -54,6 +58,7 @@ namespace MCVK::Renderer {
         // TODO: stop hardcoding in this file
         std::unique_ptr<Buffer::VertexBuffer> _vertex_buffer;
         std::unique_ptr<Buffer::IndexBuffer> _index_buffer;
+        std::unique_ptr<Buffer::UniformBuffer> _uniform_buffer;
 
         VkCommandPool _draw_command_pool;
         std::vector<VkCommandBuffer> _draw_command_buffers;
@@ -92,14 +97,14 @@ namespace MCVK::Renderer {
         void _CreateSynchronisationObjects(
             const VkDevice &device
         );
+
+        void _RecreateSwapchain();
     public:
         /**
          * @brief Construct a new game renderer
-         *
-         * @param main_window Main game window
          */
         Renderer(
-            const Window &main_window
+            Window &main_window
         );
 
         /**

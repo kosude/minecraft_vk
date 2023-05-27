@@ -39,8 +39,11 @@ namespace MCVK::Renderer::Buffer {
         info.size = _size;
         info.usage = usage ; // destination of memory transfers (from staging buffer)
         info.sharingMode = share_mode;
-        info.queueFamilyIndexCount = queue_family_info.size();
-        info.pQueueFamilyIndices = queue_family_info.data();
+
+        if (share_mode == VK_SHARING_MODE_CONCURRENT) {
+            info.queueFamilyIndexCount = queue_family_info.size();
+            info.pQueueFamilyIndices = queue_family_info.data();
+        }
 
         if (vkCreateBuffer(_device, &info, nullptr, buffer)) {
             Utils::Error("Failed to create buffer object");
@@ -106,6 +109,9 @@ namespace MCVK::Renderer::Buffer {
 
         // free command buffer space
         vkFreeCommandBuffers(_device, command_pool, 1, &command_buffer);
+    }
+
+    Buffer::Buffer() {
     }
 
     Buffer::Buffer(const VkDevice &device, const VkPhysicalDevice &physical_device, const size_t &size, const VkBufferUsageFlags &usage,

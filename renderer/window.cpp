@@ -9,6 +9,12 @@
 
 #include "window.hpp"
 
+static void _FramebufferResizeCallback(GLFWwindow *window, int width, int height) {
+    bool *_framebuffer_resized = reinterpret_cast<bool *>(glfwGetWindowUserPointer(window));
+
+    (*_framebuffer_resized) = true;
+}
+
 namespace MCVK::Renderer {
     Window::Window(const uint32_t &width, const uint32_t &height, const std::string &title) {
         Utils::Note("Creating window");
@@ -20,9 +26,11 @@ namespace MCVK::Renderer {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         _handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+
+        glfwSetWindowUserPointer(_handle, &_framebuffer_resized);
+        glfwSetFramebufferSizeCallback(_handle, _FramebufferResizeCallback);
     }
 
     void Window::Destroy() {

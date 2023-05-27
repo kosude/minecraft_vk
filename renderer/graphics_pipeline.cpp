@@ -8,6 +8,7 @@
 #include "utils/log.hpp"
 #include "utils/file_io.hpp"
 #include "renderer/data/vertex.hpp"
+#include "renderer/data/uniform.hpp"
 
 #include "graphics_pipeline.hpp"
 
@@ -120,7 +121,8 @@ namespace MCVK::Renderer {
         _rasterizer_info.lineWidth = 1.0f; // thicker than 1.0f requires another GPU feature
 
         // back face culling
-        _rasterizer_info.cullMode = VK_CULL_MODE_BACK_BIT;
+        // _rasterizer_info.cullMode = VK_CULL_MODE_BACK_BIT;
+        _rasterizer_info.cullMode = VK_CULL_MODE_NONE;
         _rasterizer_info.frontFace = VK_FRONT_FACE_CLOCKWISE; // specifies how front faces are considered
 
         // can be helpful for shadow mapping
@@ -151,9 +153,90 @@ namespace MCVK::Renderer {
         _colour_blend_state_info.pAttachments = &_colour_blend_attachment_state_info;
     }
 
+    void GraphicsPipeline::_CreateDescriptorPool() {
+        VkDescriptorPoolSize pool_size = {};
+        pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        pool_size.descriptorCount = _frames_in_flight;
+
+        VkDescriptorPoolCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        info.poolSizeCount = 1;
+        info.pPoolSizes = &pool_size;
+        info.maxSets = _frames_in_flight;
+
+        if (vkCreateDescriptorPool(_logical_device, &info, nullptr, &_descriptor_pool)) {
+            Utils::Error("Failed to create descriptor pool");
+        }
+    }
+
+    void GraphicsPipeline::_CreateDescriptorSets(const Buffer::UniformBuffer &ubo) {
+        std::vector<VkDescriptorSetLayout> layouts(_frames_in_flight, _descriptor_set_layout);
+
+        // creating one descriptor set for each frame in flight with same layouts
+        VkDescriptorSetAllocateInfo alloc_info = {};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = _descriptor_pool;
+        alloc_info.descriptorSetCount = _frames_in_flight;
+        alloc_info.pSetLayouts = layouts.data();
+
+        // allocate descriptor sets
+        _descriptor_sets.resize(_frames_in_flight);
+        if (vkAllocateDescriptorSets(_logical_device, &alloc_info, _descriptor_sets.data())) {
+            Utils::Error("Failed to create descriptor sets");
+        }
+
+        for (uint16_t i = 0; i < _frames_in_flight; i++) {
+            VkDescriptorBufferInfo buffer_info = {};
+
+            // reference the uniform buffer for that frame in flight
+            buffer_info.buffer = ubo.GetObjectHandles()[i];
+            buffer_info.offset = 0;
+            buffer_info.range = VK_WHOLE_SIZE; // works as we are overwriting the whole buffer
+
+            // struct to configure the descriptor configuration
+            VkWriteDescriptorSet descriptor_write = {};
+            descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+
+            // configuring descriptor set i
+            descriptor_write.dstSet = _descriptor_sets[i];
+            descriptor_write.dstBinding = 0; // same binding as GLSL location
+            descriptor_write.dstArrayElement = 0;
+
+            descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_write.descriptorCount = 1;
+
+            // this descriptor refers to buffer data
+            descriptor_write.pBufferInfo = &buffer_info;
+
+            vkUpdateDescriptorSets(_logical_device, 1, &descriptor_write, 0, nullptr);
+        }
+    }
+
+    void GraphicsPipeline::_CreateDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding ubo_layout_binding = {};
+        ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        ubo_layout_binding.descriptorCount = 1;
+
+        ubo_layout_binding.binding = 0; // binding as used in the shader
+
+        ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        info.bindingCount = 1;
+        info.pBindings = &ubo_layout_binding;
+
+        if (vkCreateDescriptorSetLayout(_logical_device, &info, nullptr, &_descriptor_set_layout)) {
+            Utils::Error("Failed to create descriptor set layout");
+        }
+    }
+
     void GraphicsPipeline::_CreatePipelineLayout() {
         VkPipelineLayoutCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+        info.setLayoutCount = 1;
+        info.pSetLayouts = &_descriptor_set_layout;
 
         if (vkCreatePipelineLayout(_logical_device, &info, nullptr, &_pipeline_layout)) {
             Utils::Error("Failed to create pipeline layout");
@@ -215,10 +298,13 @@ namespace MCVK::Renderer {
         }
     }
 
-    GraphicsPipeline::GraphicsPipeline(const VkDevice &logical_device, const Swapchain &swapchain)
-        : _logical_device(logical_device), _swapchain(swapchain)
+    GraphicsPipeline::GraphicsPipeline(const VkDevice &logical_device, const Swapchain &swapchain, const uint16_t &frames_in_flight,
+        const Buffer::UniformBuffer &ubo) : _logical_device(logical_device), _swapchain(swapchain), _frames_in_flight(frames_in_flight)
     {
         // constructing creation info structs
+        _CreateDescriptorSetLayout();
+        _CreateDescriptorPool();
+        _CreateDescriptorSets(ubo);
         _CreateShaderStages();
         _CreateVertexInputStage();
         _CreateDynamicState();
@@ -269,6 +355,9 @@ namespace MCVK::Renderer {
     void GraphicsPipeline::Destroy() {
         vkDestroyPipeline(_logical_device, _handle, nullptr);
         vkDestroyPipelineLayout(_logical_device, _pipeline_layout, nullptr);
+
+        vkDestroyDescriptorPool(_logical_device, _descriptor_pool, nullptr);
+        vkDestroyDescriptorSetLayout(_logical_device, _descriptor_set_layout, nullptr);
 
         vkDestroyRenderPass(_logical_device, _render_pass, nullptr);
 

@@ -8,14 +8,12 @@
 #include <iostream>
 #include <set>
 
-#define GLFW_INCLUDE_VULKAN
-#define VK_NO_PROTOTYPES
-#include "renderer/window.hpp"
-
 #include "renderer/device_manager.hpp"
 #include "renderer/extension_manager.hpp"
 #include "renderer/swap_chain.hpp"
 #include "utils/log.hpp"
+
+#include "renderer/data/uniform.hpp"
 
 #include "renderer.hpp"
 
@@ -23,6 +21,8 @@
 
 // TODO: stop hardcoding in this file
 #include "data/vertex.hpp"
+#include <chrono>
+#include <glm/glm/gtc/matrix_transform.hpp>
 const std::vector<MCVK::Renderer::Data::Vertex> vertices = {
     { { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
     { { -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f } },
@@ -67,6 +67,29 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverit
     }
 
     return VK_FALSE;
+}
+
+// TODO: stop hardcoding this here
+static void _UpdateUniformBuffer(MCVK::Renderer::Buffer::UniformBuffer &ubo, uint32_t current_image, VkExtent2D swapchain_extent) {
+    static auto start_time = std::chrono::high_resolution_clock::now();
+
+    // calculate time in seconds since rendering started
+    auto current_time = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
+
+    // uniform buffer data will be updated
+    auto udata = MCVK::Renderer::Data::Uniform();
+
+    // rotate object around z axis
+    udata.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    udata.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    udata.proj = glm::perspective(glm::radians(45.0f), swapchain_extent.width / (float) swapchain_extent.height, 0.1f, 10.0f);
+
+    // flip scale of y axis as glm was designed for opengl in which y coordinates are flipped relative to in vulkan
+    udata.proj[1][1] *= -1;
+
+    ubo.SetData(&udata, current_image);
 }
 
 namespace MCVK::Renderer {
@@ -274,7 +297,7 @@ namespace MCVK::Renderer {
         render_pass_info.renderArea.extent = _main_swapchain_extent;
 
         // clear the screen to a specified colour
-        VkClearValue clear_colour = {{{ 0.2f, 0.3f, 0.3f, 1.0f }}};
+        VkClearValue clear_colour = {{{ 0.0f, 0.0f, 0.0f, 1.0f }}};
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_colour;
 
@@ -306,6 +329,10 @@ namespace MCVK::Renderer {
         vkCmdBindVertexBuffers(_draw_command_buffers[_current_frame], 0, 1, vertex_buffers, offsets);
         // bind index buffer
         vkCmdBindIndexBuffer(_draw_command_buffers[_current_frame], _index_buffer->GetObjectHandle(), 0, VK_INDEX_TYPE_UINT16);
+
+        // bind descriptor sets (e.g. for uniform buffers)
+        vkCmdBindDescriptorSets(_draw_command_buffers[_current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, _graphics_pipeline->_pipeline_layout, 0, 1,
+            &_graphics_pipeline->_descriptor_sets[_current_frame], 0, nullptr);
 
         // issue draw call (for triangle)
         vkCmdDrawIndexed(_draw_command_buffers[_current_frame], indices.size(), 1, 0, 0, 0);
@@ -342,7 +369,35 @@ namespace MCVK::Renderer {
         }
     }
 
-    Renderer::Renderer(const Window &main_window) {
+    void Renderer::_RecreateSwapchain() {
+        DeviceWaitIdle();
+
+        // clean up previous swapchain objects
+        for (VkFramebuffer fb : _main_swapchain_framebuffers) {
+            vkDestroyFramebuffer(_device, fb, nullptr);
+        }
+        for (VkImageView view : _main_swapchain_image_views) {
+            vkDestroyImageView(_device, view, nullptr);
+        }
+        vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
+
+        // create swapchain + store extra swap data
+        int width, height;
+        glfwGetFramebufferSize(_main_window._handle, &width, &height);
+
+        // overwrite swapchain data
+        Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);
+        _main_swapchain = swapchain_cl.GetHandle();
+        _main_swapchain_images = swapchain_cl.GetImages();
+        _main_swapchain_image_views = swapchain_cl.CreateImageViews();
+        _main_swapchain_image_format = swapchain_cl.GetImageFormat();
+        _main_swapchain_extent = swapchain_cl.GetExtent();
+
+        // recreate framebuffers
+        _CreateFramebuffers(_device);
+    }
+
+    Renderer::Renderer(Window &main_window) : _main_window(main_window) {
         Utils::Note("Creating renderer");
 
         if (volkInitialize()) {
@@ -366,29 +421,9 @@ namespace MCVK::Renderer {
         // create vulkan logical device
         _CreateLogicalDevice(&_device);
 
-        // create swapchain + store extra swap data
-        int width, height;
-        glfwGetFramebufferSize(main_window._handle, &width, &height);
-
-        Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);
-        _main_swapchain = swapchain_cl.GetHandle();
-        _main_swapchain_images = swapchain_cl.GetImages();
-        _main_swapchain_image_views = swapchain_cl.CreateImageViews();
-        _main_swapchain_image_format = swapchain_cl.GetImageFormat();
-        _main_swapchain_extent = swapchain_cl.GetExtent();
-
-        // create graphics pipeline
-        _graphics_pipeline = std::unique_ptr<GraphicsPipeline>(new GraphicsPipeline(_device, swapchain_cl));
-
-        // create framebuffers
-        _CreateFramebuffers(_device);
-
         // create command pool(s) and their buffer(s)
         _CreateCommandPools(_device, _physical_device, _main_surface);
         _CreateCommandBuffers(_device);
-
-        // create synchronisation primitives
-        _CreateSynchronisationObjects(_device);
 
         // TODO: stop hardcoding in this file
         DeviceQueueFamilyInfo queue_family_info = DeviceManager::GetDeviceQueueFamilyInfo(_physical_device, _main_surface);
@@ -418,6 +453,34 @@ namespace MCVK::Renderer {
             )
         );
         _index_buffer->SetData((void *) indices.data(), _transfer_command_pool, _transfer_queue);
+        _uniform_buffer = std::unique_ptr<Buffer::UniformBuffer>(
+            new Buffer::UniformBuffer(
+                _device,
+                _physical_device,
+                sizeof(Data::Uniform),
+                MAX_FRAMES_IN_FLIGHT
+            )
+        );
+
+        // create swapchain + store extra swap data
+        int width, height;
+        glfwGetFramebufferSize(main_window._handle, &width, &height);
+
+        Swapchain swapchain_cl(_device, _physical_device, _main_surface, (uint32_t) width, (uint32_t) height);
+        _main_swapchain = swapchain_cl.GetHandle();
+        _main_swapchain_images = swapchain_cl.GetImages();
+        _main_swapchain_image_views = swapchain_cl.CreateImageViews();
+        _main_swapchain_image_format = swapchain_cl.GetImageFormat();
+        _main_swapchain_extent = swapchain_cl.GetExtent();
+
+        // create graphics pipeline
+        _graphics_pipeline = std::unique_ptr<GraphicsPipeline>(new GraphicsPipeline(_device, swapchain_cl, MAX_FRAMES_IN_FLIGHT, *_uniform_buffer));
+
+        // create framebuffers
+        _CreateFramebuffers(_device);
+
+        // create synchronisation primitives
+        _CreateSynchronisationObjects(_device);
     }
 
     void Renderer::Destroy() {
@@ -430,18 +493,17 @@ namespace MCVK::Renderer {
         for (VkFramebuffer fb : _main_swapchain_framebuffers) {
             vkDestroyFramebuffer(_device, fb, nullptr);
         }
-
         for (VkImageView view : _main_swapchain_image_views) {
             vkDestroyImageView(_device, view, nullptr);
         }
+        vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
 
         _graphics_pipeline->Destroy();
-
-        vkDestroySwapchainKHR(_device, _main_swapchain, nullptr);
 
         // TODO: stop hardcoding in this file
         _vertex_buffer->Destroy();
         _index_buffer->Destroy();
+        _uniform_buffer->Destroy();
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(_device, _image_available_semaphores[i], nullptr);
@@ -460,15 +522,30 @@ namespace MCVK::Renderer {
     void Renderer::Draw() {
         // wait for and reset fence indicating this frame can be rendered
         vkWaitForFences(_device, 1, &_in_flight_fences[_current_frame], VK_TRUE, UINT64_MAX);
-        vkResetFences(_device, 1, &_in_flight_fences[_current_frame]);
 
         // get image to render to
         uint32_t image_index;
-        vkAcquireNextImageKHR(_device, _main_swapchain, UINT64_MAX, _image_available_semaphores[_current_frame], VK_NULL_HANDLE, &image_index);
+        VkResult image_aquire_result =
+            vkAcquireNextImageKHR(_device, _main_swapchain, UINT64_MAX, _image_available_semaphores[_current_frame], VK_NULL_HANDLE, &image_index);
+
+        // check if the swapchain has become incompatible with the surface (e.g. after resize): VK_ERROR_OUT_OF_DATE_KHR
+        if (image_aquire_result == VK_ERROR_OUT_OF_DATE_KHR) {
+            _RecreateSwapchain();
+            return;
+        }
+        // VK_SUBOPTIMAL_KHR: swapchain can still be used but properties are not exactly matched.
+        else if (image_aquire_result != VK_SUCCESS && image_aquire_result != VK_SUBOPTIMAL_KHR) {
+            Utils::Error("Failed to acquire swapchain image for rendering");
+        }
+
+        // reset fence if we are submitting work
+        vkResetFences(_device, 1, &_in_flight_fences[_current_frame]);
 
         // record draw operations to the command buffer
         vkResetCommandBuffer(_draw_command_buffers[_current_frame], 0);
         _RecordDrawCommandBuffer(image_index);
+
+        _UpdateUniformBuffer(*_uniform_buffer, _current_frame, _main_swapchain_extent);
 
         VkSubmitInfo submit_info = {};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -508,7 +585,14 @@ namespace MCVK::Renderer {
         present_info.pImageIndices = &image_index;
 
         // submit present request to the presentation queue
-        vkQueuePresentKHR(_present_queue, &present_info);
+        VkResult queue_present_result = vkQueuePresentKHR(_present_queue, &present_info);
+
+        if (queue_present_result == VK_ERROR_OUT_OF_DATE_KHR || queue_present_result == VK_SUBOPTIMAL_KHR || _main_window._framebuffer_resized) {
+            _main_window._framebuffer_resized = false;
+            _RecreateSwapchain();
+        } else if (queue_present_result != VK_SUCCESS) {
+            Utils::Error("Failed to submit request to present swapchain image");
+        }
 
         _current_frame = (_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
     }

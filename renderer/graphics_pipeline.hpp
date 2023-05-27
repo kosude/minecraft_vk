@@ -13,6 +13,7 @@
 
 #include <vector>
 
+#include "renderer/buffer/uniform_buffer.hpp"
 #include "renderer/swap_chain.hpp"
 
 // Note that 'state' and 'stage' are often used interchangeably which is dumb and wrong, but I'm quite lazy and can't be bothered to fix this.
@@ -30,6 +31,8 @@ namespace MCVK::Renderer {
 
         VkDevice _logical_device;
         Swapchain _swapchain;
+
+        uint16_t _frames_in_flight;
 
         VkShaderModule _vertex_shader_mod, _fragment_shader_mod;
         VkShaderModule _CreateShaderModule(
@@ -73,7 +76,15 @@ namespace MCVK::Renderer {
         VkPipelineColorBlendStateCreateInfo _colour_blend_state_info;
         void _CreateColourBlendState();
 
-        // layout to hold uniform definitions
+        // layouts to hold uniform definitions
+        VkDescriptorPool _descriptor_pool;
+        void _CreateDescriptorPool();
+        std::vector<VkDescriptorSet> _descriptor_sets;
+        void _CreateDescriptorSets( // also configures descriptors within the descriptor sets
+            const Buffer::UniformBuffer &ubo
+        );
+        VkDescriptorSetLayout _descriptor_set_layout;
+        void _CreateDescriptorSetLayout();
         VkPipelineLayout _pipeline_layout;
         void _CreatePipelineLayout();
 
@@ -87,7 +98,9 @@ namespace MCVK::Renderer {
          */
         GraphicsPipeline(
             const VkDevice &logical_device,
-            const Swapchain &swapchain
+            const Swapchain &swapchain,
+            const uint16_t &frames_in_flight,
+            const Buffer::UniformBuffer &ubo
         );
 
         /**

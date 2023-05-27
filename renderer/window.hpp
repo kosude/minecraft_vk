@@ -23,6 +23,8 @@ namespace MCVK::Renderer {
 
         GLFWwindow *_handle;
 
+        bool _framebuffer_resized = false;
+
     public:
         /**
          * @brief Create a new window

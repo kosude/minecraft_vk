@@ -9,8 +9,6 @@
 #ifndef __buffer__index_buffer_hpp
 #define __buffer__index_buffer_hpp
 
-#include <volk/volk.h>
-
 #include "buffer.hpp"
 
 struct DeviceQueueFamilyInfo;

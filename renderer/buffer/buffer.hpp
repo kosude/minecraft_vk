@@ -26,16 +26,6 @@ namespace MCVK::Renderer::Buffer {
             const uint32_t &type_filter
         );
 
-        void _CreateBuffer(
-            VkBuffer *buffer,
-            VkDeviceMemory *memory,
-            const VkBufferUsageFlags &usage,
-            const VkSharingMode &share_mode,
-            const std::vector<uint32_t> &queue_family_info,
-            const VkPhysicalDevice &physical_device,
-            const VkMemoryPropertyFlags &memory_properties
-        );
-
         // submit transfer of data from staging buffer to device local memory
         void _StageData(
             const VkCommandPool &command_pool,
@@ -53,7 +43,21 @@ namespace MCVK::Renderer::Buffer {
         VkBuffer _staging_buffer_handle;
         VkDeviceMemory _staging_buffer_memory_handle;
 
+        void _CreateBuffer(
+            VkBuffer *buffer,
+            VkDeviceMemory *memory,
+            const VkBufferUsageFlags &usage,
+            const VkSharingMode &share_mode,
+            const std::vector<uint32_t> &queue_family_info,
+            const VkPhysicalDevice &physical_device,
+            const VkMemoryPropertyFlags &memory_properties
+        );
+
     public:
+        /**
+         * @brief Create and allocate space for the buffer object
+         */
+        Buffer();
         /**
          * @brief Create and allocate space for the buffer object
          */
@@ -69,7 +73,7 @@ namespace MCVK::Renderer::Buffer {
         /**
          * @brief Destroy the buffer object
          */
-        void Destroy();
+        virtual void Destroy();
 
         /**
          * @brief Fill the buffer's memory with the given data, memory transfer operations done on given command pool + queue
