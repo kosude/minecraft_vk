@@ -18,6 +18,9 @@ set(C_CPP_SOURCES
     "src/game/game.cpp"
     "src/game/main.cpp"
 
+    "src/renderer/renderer.cpp"
+    "src/renderer/window.cpp"
+
     "src/util/log.cpp"
 )
 set(SHADER_SOURCES

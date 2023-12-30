@@ -10,19 +10,20 @@
 #include "util/log.hpp"
 
 namespace mcvk::Game {
-    Game::Game() {
-        Utils::Log("Log message");
-        Utils::Info("Info message");
-        Utils::Warn("Warning message");
-        Utils::Error("Error message");
-        Utils::Fatal("Fatal error message");
+    Game::Game()
+        : _window{720, 540, "Minecraft Vulkan"}, _renderer{} {
+        Utils::Info("Initialising game");
     }
 
     Game::~Game() {
-
+        Utils::Info("Terminating game");
     }
 
     void Game::Run() {
-
+        while (true) {
+            if (!_window.Update()) {
+                break;
+            }
+        }
     }
 }

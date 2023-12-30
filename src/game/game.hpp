@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "renderer/renderer.hpp"
+#include "renderer/window.hpp"
+
 namespace mcvk::Game {
     class Game {
     public:
@@ -14,5 +17,9 @@ namespace mcvk::Game {
         ~Game();
 
         void Run();
+
+    private:
+        Renderer::Window _window;
+        Renderer::Renderer _renderer;
     };
 }
