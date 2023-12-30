@@ -5,16 +5,22 @@
  *   See the LICENCE file for more information.
  */
 
-#include <iostream>
+#include "game/game.hpp"
+#include "util/log.hpp"
 
-#include <GLFW/glfw3.h>
-#include <volk.h>
-#include <glm/glm.hpp>
-#include <cio.h>
-#include <cioenum.h>
+#include <stdexcept>
+
+using namespace mcvk;
 
 int main(int argc, char **argv) {
-    std::cout << "Hello minecraft_vk" << std::endl;
+    try {
+        Game::Game game{};
+
+        game.Run();
+    } catch (const std::exception &e) {
+        Utils::Fatal(e.what());
+        return EXIT_FAILURE;
+    }
 
     return 0;
 }

@@ -1,37 +1,31 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 
 project("minecraftvk")
-
-set(GAME_TARGET "game")
-set(GAME_TARGET_DEFINITIONS)
-
-set(SOURCES
-    "src/game/main.cpp"
-)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(${GAME_TARGET} ${SOURCES})
+set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
+set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/src/renderer/shaders")
 
+set(GAME_TARGET "game")
+set(GAME_TARGET_DEFINITIONS)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "DEBUG")
 endif()
 
-set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
-target_include_directories(${GAME_TARGET} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${DEPS_DIR})
+set(C_CPP_SOURCES
+    "src/game/game.cpp"
+    "src/game/main.cpp"
 
-set(CUTILS_CLIST OFF)
-set(CUTILS_CARRAY OFF)
-add_subdirectory("${DEPS_DIR}/cutils")
-target_link_libraries(${GAME_TARGET} cutils)
+    "src/util/log.cpp"
+)
+set(SHADER_SOURCES
+)
 
-set(GLFW_BUILD_DOCS OFF)
-add_subdirectory("${DEPS_DIR}/glfw")
-target_link_libraries(${GAME_TARGET} glfw)
+
 
 find_package(Vulkan REQUIRED)
-
 if (WIN32)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} WIN32)
@@ -43,15 +37,31 @@ elseif (UNIX)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_XLIB_KHR)
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} UNIX)
 endif()
-
 add_subdirectory("${DEPS_DIR}/volk")
-target_link_libraries(${GAME_TARGET} volk)
 
-target_compile_definitions(${GAME_TARGET} PRIVATE ${GAME_TARGET_DEFINITIONS})
+set(GLFW_BUILD_DOCS OFF)
+add_subdirectory("${DEPS_DIR}/glfw")
 
-set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/renderer/shaders")
-set(SHADER_SOURCES
-)
+set(CUTILS_CLIST OFF)
+set(CUTILS_CARRAY OFF)
+add_subdirectory("${DEPS_DIR}/cutils")
+
+
+
+add_executable(${GAME_TARGET} ${C_CPP_SOURCES})
+target_link_libraries(${GAME_TARGET}
+    volk
+    glfw
+    cutils)
+target_include_directories(${GAME_TARGET}
+    PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/"
+    "${DEPS_DIR}")
+target_compile_definitions(${GAME_TARGET}
+    PRIVATE
+    ${GAME_TARGET_DEFINITIONS})
+
+
 
 add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/"
