@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #include <string>
+#include <vector>
 
 namespace mcvk::Renderer {
     class Window {
@@ -21,6 +22,8 @@ namespace mcvk::Renderer {
         Window &operator=(const Window &) = delete;
 
         bool Update();
+
+        static std::vector<const char *> GetGLFWRequiredExtensions();
 
     private:
         void _InitGLFWWindow();

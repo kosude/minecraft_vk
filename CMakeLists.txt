@@ -21,7 +21,7 @@ set(C_CPP_SOURCES
     "src/renderer/renderer.cpp"
     "src/renderer/window.cpp"
 
-    "src/util/log.cpp"
+    "src/utils/log.cpp"
 )
 set(SHADER_SOURCES
 )

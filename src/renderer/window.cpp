@@ -7,17 +7,21 @@
 
 #include "window.hpp"
 
-#include "util/log.hpp"
+#include "utils/log.hpp"
 
 static bool GLFW_ERRCALLBACK_SET = false;
 
 namespace mcvk::Renderer {
     Window::Window(int wid, int hei, const std::string &name)
         : _width(wid), _height(hei), _name(name) {
+        Utils::Info("Creating window");
+
         _InitGLFWWindow();
     }
 
     Window::~Window() {
+        Utils::Info("Destroying window");
+
         glfwDestroyWindow(_window);
 
         glfwTerminate();
@@ -27,6 +31,16 @@ namespace mcvk::Renderer {
         glfwPollEvents();
 
         return !glfwWindowShouldClose(_window);
+    }
+
+    std::vector<const char *> Window::GetGLFWRequiredExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        const char **glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+        return extensions;
     }
 
     void Window::_InitGLFWWindow() {

@@ -7,7 +7,7 @@
 
 #include "game.hpp"
 
-#include "util/log.hpp"
+#include "utils/log.hpp"
 
 namespace mcvk::Game {
     Game::Game()

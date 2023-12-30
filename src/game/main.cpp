@@ -6,7 +6,7 @@
  */
 
 #include "game/game.hpp"
-#include "util/log.hpp"
+#include "utils/log.hpp"
 
 #include <stdexcept>
 
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 
         game.Run();
     } catch (const std::exception &e) {
-        Utils::Fatal(e.what());
+        Utils::Fatal(e.what(), false);
         return EXIT_FAILURE;
     }
 
