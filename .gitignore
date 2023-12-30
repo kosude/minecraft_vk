@@ -1,0 +1,7 @@
+build/
+spv/
+**/*.spv
+
+.vscode/
+
+.DS_Store
