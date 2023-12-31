@@ -8,6 +8,9 @@
 #pragma once
 
 #include "renderer/device.hpp"
+#include "renderer/instance_manager.hpp"
+#include "renderer/graphics_pipeline.hpp"
+#include "renderer/shader_set.hpp"
 #include "renderer/window.hpp"
 
 #include <volk/volk.h>
@@ -24,26 +27,13 @@ namespace mcvk::Renderer {
         Renderer &operator=(const Renderer &) = delete;
 
     private:
-        void _CreateInstance();
-        void _CreateDebugMessenger();
-        void _CreateSurface();
-        void _CreateDevice();
-
-        std::vector<const char *> _GetRequiredExtensions();
-        bool _CheckExtensionsSupport(const std::vector<const char *> &required);
-        bool _CheckValidationLayerSupport();
-        void _PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create_info);
+        std::vector<ShaderInfo> _GetShaders();
 
         const Window &_window;
-
-        VkInstance _instance;
-
         VkSurfaceKHR _surface;
-        Device _device;
 
-#       ifdef DEBUG
-            VkDebugUtilsMessengerEXT _debug_messenger;
-            const std::vector<const char *> _validation_layers = { "VK_LAYER_KHRONOS_validation" };
-#       endif
+        InstanceManager _instance_mgr;
+        Device _device;
+        GraphicsPipeline _graphics_pipeline;
     };
 }

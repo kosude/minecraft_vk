@@ -18,14 +18,12 @@ namespace mcvk::Utils {
     void Log(const std::string &msg) {
         // verbose messages not shown in release
 #       ifdef DEBUG
-            std::cout << "[" << __GetCurrentDateTime(true) << "] " << msg << std::endl;
+            std::cout << "[" << __GetCurrentDateTime(true) << "] DEBUG: " << msg << std::endl;
 #       endif
     }
 
     void Info(const std::string &msg) {
-        ciocolstateset(CIOCOL_BLUE, 0xff, stdout);
         std::cout << "[" << __GetCurrentDateTime(true) << "] " << msg << std::endl;
-        ciocolstatedef(stdout);
     }
 
     void Warn(const std::string &msg) {

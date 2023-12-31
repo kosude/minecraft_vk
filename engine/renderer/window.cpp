@@ -14,14 +14,12 @@ static bool GLFW_ERRCALLBACK_SET = false;
 namespace mcvk::Renderer {
     Window::Window(int wid, int hei, const std::string &name)
         : _width(wid), _height(hei), _name(name) {
-        Utils::Info("Creating window");
+        Utils::Info("Creating GLFW window with dims " + std::to_string(wid) + "x" + std::to_string(hei) + ", name \"" + name + "\"");
 
         _InitGLFWWindow();
     }
 
     Window::~Window() {
-        Utils::Info("Destroying window");
-
         glfwDestroyWindow(_window);
 
         glfwTerminate();

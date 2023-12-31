@@ -18,10 +18,12 @@ namespace mcvk::Game {
     }
 
     void Game::Run() {
+        Utils::Info("Entering main loop...");
         while (true) {
-            if (!_window.Update()) {
+            if (!_window.Update())
                 break;
-            }
         }
+
+        Utils::Info("Window closed");
     }
 }

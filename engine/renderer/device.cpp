@@ -16,25 +16,18 @@
 namespace mcvk::Renderer {
     Device::Device(const Window &window, const VkInstance &instance, const VkSurfaceKHR &surface)
         : _window{window}, _instance{instance}, _surface(surface) {
-    }
-
-    Device::~Device() {
-    }
-
-    void Device::Initialise() {
-        Utils::Info("Creating device manager");
-
         _PickPhysicalDevice();
         _CreateLogicalDevice();
         _CreateCommandPools();
     }
 
-    void Device::Destroy() {
-        Utils::Info("Destroying device manager");
-
+    Device::~Device() {
         vkDestroyCommandPool(_device, _transfer_command_pool, nullptr);
         vkDestroyCommandPool(_device, _graphics_command_pool, nullptr);
         vkDestroyDevice(_device, nullptr);
+    }
+
+    void Device::Destroy() {
     }
 
     void Device::_PickPhysicalDevice() {
@@ -43,7 +36,7 @@ namespace mcvk::Renderer {
         if (device_count == 0) {
             Utils::Fatal("Failed to find a GPU with Vulkan support");
         }
-        Utils::Log("Found " + std::to_string(device_count) + " physical device(s).");
+        Utils::Info("Device manager found " + std::to_string(device_count) + " physical device(s).");
         std::vector<VkPhysicalDevice> devices(device_count);
         vkEnumeratePhysicalDevices(_instance, &device_count, devices.data());
 
@@ -60,10 +53,10 @@ namespace mcvk::Renderer {
 
         vkGetPhysicalDeviceProperties(_physical_device, &_properties);
 
-        Utils::Info("Chose physical device: \"" + std::string{_properties.deviceName} + "\"");
+        Utils::Info("Using physical device (GPU): \"" + std::string{_properties.deviceName} + "\"");
 
-        Utils::Log(
-            "Found queue family indices for physical device \"" + std::string{_properties.deviceName} + "\":\n" +
+        Utils::Info(
+            "Device manager found queue family indices for chosen physical device \"" + std::string{_properties.deviceName} + "\":\n" +
             "\tGraphics: " + std::to_string(_queue_families.graphics.value()) + "\n" +
             "\tPresent:  " + std::to_string(_queue_families.present.value()) + "\n" +
             "\tCompute:  " + std::to_string(_queue_families.compute.value()) + "\n" +

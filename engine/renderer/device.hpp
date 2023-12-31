@@ -38,10 +38,10 @@ namespace mcvk::Renderer {
         Device(Device &&) = delete;
         Device &operator=(Device &&) = delete;
 
-        void Initialise();
         void Destroy();
 
-        inline const VkPhysicalDeviceProperties &GetProperties() const { return _properties; }
+        inline const VkDevice &LogicalDevice() const { return _device; }
+        inline const VkPhysicalDeviceProperties &Properties() const { return _properties; }
 
     private:
         void _PickPhysicalDevice();
