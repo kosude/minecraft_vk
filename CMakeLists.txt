@@ -15,14 +15,14 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 set(C_CPP_SOURCES
-    "src/game/game.cpp"
-    "src/game/main.cpp"
+    "game/game.cpp"
+    "game/main.cpp"
 
-    "src/renderer/device.cpp"
-    "src/renderer/renderer.cpp"
-    "src/renderer/window.cpp"
+    "engine/renderer/device.cpp"
+    "engine/renderer/renderer.cpp"
+    "engine/renderer/window.cpp"
 
-    "src/utils/log.cpp"
+    "engine/utils/log.cpp"
 )
 set(SHADER_SOURCES
 )
@@ -59,7 +59,8 @@ target_link_libraries(${GAME_TARGET}
     cutils)
 target_include_directories(${GAME_TARGET}
     PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/engine/"
     "${DEPS_DIR}")
 target_compile_definitions(${GAME_TARGET}
     PRIVATE

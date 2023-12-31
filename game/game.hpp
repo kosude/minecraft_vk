@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "renderer/renderer.hpp"
-#include "renderer/window.hpp"
+#include "engine/renderer/renderer.hpp"
+#include "engine/renderer/window.hpp"
 
 namespace mcvk::Game {
     class Game {
