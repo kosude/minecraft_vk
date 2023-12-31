@@ -7,6 +7,8 @@
 
 #pragma once
 
+#define VK_NO_PROTOTYPES
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <string>
@@ -22,6 +24,8 @@ namespace mcvk::Renderer {
         Window &operator=(const Window &) = delete;
 
         bool Update();
+
+        VkSurfaceKHR CreateSurface(VkInstance instance) const;
 
         static std::vector<const char *> GetGLFWRequiredExtensions();
 

@@ -18,14 +18,22 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverit
     const VkDebugUtilsMessengerCallbackDataEXT *data, void *user);
 
 namespace mcvk::Renderer {
-    Renderer::Renderer() {
+    Renderer::Renderer(const Window &window)
+        : _window{window}, _device{window, _instance, _surface} {
         Utils::Info("Creating renderer");
 
         _CreateInstance();
+        _CreateDebugMessenger();
+        _CreateSurface();
+        _CreateDevice();
     }
 
     Renderer::~Renderer() {
         Utils::Info("Destroying renderer");
+
+        _device.Destroy();
+
+        vkDestroySurfaceKHR(_instance, _surface, nullptr);
 
 #       ifdef DEBUG
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
@@ -86,12 +94,26 @@ namespace mcvk::Renderer {
         }
 
         volkLoadInstanceOnly(_instance);
+    }
 
+    void Renderer::_CreateDebugMessenger() {
 #       ifdef DEBUG
+            VkDebugUtilsMessengerCreateInfoEXT debug_messenger_info;
+            _PopulateDebugMessengerCreateInfo(debug_messenger_info);
+
             if (vkCreateDebugUtilsMessengerEXT(_instance, &debug_messenger_info, nullptr, &_debug_messenger)) {
                 Utils::Error("Failed to create Vulkan debug messenger");
             }
 #       endif
+        return;
+    }
+
+    void Renderer::_CreateSurface() {
+        _surface = _window.CreateSurface(_instance);
+    }
+
+    void Renderer::_CreateDevice() {
+        _device.Initialise();
     }
 
     std::vector<const char *> Renderer::_GetRequiredExtensions() {

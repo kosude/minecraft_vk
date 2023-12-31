@@ -27,6 +27,16 @@ namespace mcvk::Renderer {
         glfwTerminate();
     }
 
+    VkSurfaceKHR Window::CreateSurface(VkInstance instance) const {
+        VkSurfaceKHR surface;
+        if (glfwCreateWindowSurface(instance, _window, nullptr, &surface) != VK_SUCCESS) {
+            Utils::Fatal("Failed to create window surface");
+            return VK_NULL_HANDLE;
+        }
+
+        return surface;
+    }
+
     bool Window::Update() {
         glfwPollEvents();
 

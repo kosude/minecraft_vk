@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project("minecraftvk")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
@@ -18,6 +18,7 @@ set(C_CPP_SOURCES
     "src/game/game.cpp"
     "src/game/main.cpp"
 
+    "src/renderer/device.cpp"
     "src/renderer/renderer.cpp"
     "src/renderer/window.cpp"
 

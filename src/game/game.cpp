@@ -11,7 +11,7 @@
 
 namespace mcvk::Game {
     Game::Game()
-        : _window{720, 540, "Minecraft Vulkan"}, _renderer{} {
+        : _window{720, 540, "Minecraft Vulkan"}, _renderer{_window} {
         Utils::Info("Initialising game");
     }
 
