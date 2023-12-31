@@ -42,6 +42,8 @@ namespace mcvk::Renderer {
 
         inline const VkDevice &LogicalDevice() const { return _device; }
         inline const VkPhysicalDeviceProperties &Properties() const { return _properties; }
+        inline SwapChainSupportDetails SwapchainSupportDetails() const { return _QuerySwapChainSupport(_physical_device); }
+        inline QueueFamilyIndices FindQueueFamilyIndices() const { return _FindQueueFamilies(_physical_device); }
 
     private:
         void _PickPhysicalDevice();
@@ -49,10 +51,10 @@ namespace mcvk::Renderer {
         void _CreateCommandPools();
 
         bool _CheckDeviceSuitable(VkPhysicalDevice device);
-        QueueFamilyIndices _FindQueueFamilies(VkPhysicalDevice device);
-        bool _CheckExtensionSupport(VkPhysicalDevice device);
-        SwapChainSupportDetails _QuerySwapChainSupport(VkPhysicalDevice device);
-        VkPhysicalDeviceFeatures _GetRequiredDeviceFeatures();
+        QueueFamilyIndices _FindQueueFamilies(VkPhysicalDevice device) const;
+        bool _CheckExtensionSupport(VkPhysicalDevice device) const;
+        SwapChainSupportDetails _QuerySwapChainSupport(VkPhysicalDevice device) const;
+        VkPhysicalDeviceFeatures _GetRequiredDeviceFeatures() const;
 
         const Window &_window;
         const VkInstance &_instance;

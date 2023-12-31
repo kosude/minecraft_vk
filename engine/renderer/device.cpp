@@ -166,7 +166,7 @@ namespace mcvk::Renderer {
             features_supported;     // required devices features are supported
     }
 
-    QueueFamilyIndices Device::_FindQueueFamilies(VkPhysicalDevice device) {
+    QueueFamilyIndices Device::_FindQueueFamilies(VkPhysicalDevice device) const {
         QueueFamilyIndices indices{};
 
         uint32_t family_count = 0;
@@ -222,7 +222,7 @@ namespace mcvk::Renderer {
         return indices;
     }
 
-    bool Device::_CheckExtensionSupport(VkPhysicalDevice device) {
+    bool Device::_CheckExtensionSupport(VkPhysicalDevice device) const {
         uint32_t extension_count;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
 
@@ -242,7 +242,7 @@ namespace mcvk::Renderer {
         return required.empty();
     }
 
-    SwapChainSupportDetails Device::_QuerySwapChainSupport(VkPhysicalDevice device) {
+    SwapChainSupportDetails Device::_QuerySwapChainSupport(VkPhysicalDevice device) const {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
 
@@ -268,7 +268,7 @@ namespace mcvk::Renderer {
         return details;
     }
 
-    VkPhysicalDeviceFeatures Device::_GetRequiredDeviceFeatures() {
+    VkPhysicalDeviceFeatures Device::_GetRequiredDeviceFeatures() const {
         VkPhysicalDeviceFeatures features{};
 
         return features;

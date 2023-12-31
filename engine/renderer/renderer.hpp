@@ -11,6 +11,7 @@
 #include "renderer/instance_manager.hpp"
 #include "renderer/graphics_pipeline.hpp"
 #include "renderer/shader_set.hpp"
+#include "renderer/swapchain.hpp"
 #include "renderer/window.hpp"
 
 #include <volk/volk.h>
@@ -28,6 +29,7 @@ namespace mcvk::Renderer {
         Renderer &operator=(const Renderer &) = delete;
 
     private:
+        void _RecreateSwapchain();
         void _CreatePipelines();
 
         std::vector<ShaderInfo> _GetShaders();
@@ -37,6 +39,8 @@ namespace mcvk::Renderer {
 
         InstanceManager _instance_mgr;
         Device _device;
+
+        std::unique_ptr<Swapchain> _swapchain;
 
         std::unique_ptr<GraphicsPipeline> _default_pipeline;
     };

@@ -25,9 +25,10 @@ namespace mcvk::Renderer {
 
         bool Update();
 
-        VkSurfaceKHR CreateSurface(VkInstance instance) const;
-
+        inline VkExtent2D GetExtent() const { return { static_cast<uint32_t>(_width), static_cast<uint32_t>(_height) }; }
         static std::vector<const char *> GetGLFWRequiredExtensions();
+
+        VkSurfaceKHR CreateSurface(VkInstance instance) const;
 
     private:
         void _InitGLFWWindow();
