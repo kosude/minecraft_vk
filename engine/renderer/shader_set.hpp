@@ -33,6 +33,8 @@ namespace mcvk::Renderer {
         ShaderSet(const ShaderSet &) = delete;
         ShaderSet &operator=(const ShaderSet &) = delete;
 
+        std::vector<VkPipelineShaderStageCreateInfo> BuildShaderStageInfos();
+
     private:
         std::vector<char> _ReadFile(const std::string &path);
         void _AddShaderModule(ShaderStage stage, const std::vector<char> &src);

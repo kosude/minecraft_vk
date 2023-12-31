@@ -14,12 +14,20 @@ namespace mcvk::Renderer {
     Renderer::Renderer(const Window &window)
         : _window{window},
         _instance_mgr{window, _surface},
-        _device{window, _instance_mgr.Instance(), _surface},
-        _graphics_pipeline{_device, _GetShaders()} {
+        _device{window, _instance_mgr.Instance(), _surface} {
+        _CreatePipelines();
     }
 
     Renderer::~Renderer() {
         vkDestroySurfaceKHR(_instance_mgr.Instance(), _surface, nullptr);
+    }
+
+    void Renderer::_CreatePipelines() {
+        std::vector<ShaderInfo> shaders = _GetShaders();
+
+        auto config = GraphicsPipeline::Config::Defaults();
+
+        _default_pipeline = std::make_unique<GraphicsPipeline>(_device, shaders, config);
     }
 
     std::vector<ShaderInfo> Renderer::_GetShaders() {

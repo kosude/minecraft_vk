@@ -22,6 +22,7 @@ set(C_CPP_SOURCES
     "engine/renderer/instance_manager.cpp"
     "engine/renderer/graphics_pipeline.cpp"
     "engine/renderer/renderer.cpp"
+    "engine/renderer/model.cpp"
     "engine/renderer/shader_set.cpp"
     "engine/renderer/window.cpp"
 

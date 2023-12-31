@@ -16,6 +16,7 @@
 #include <volk/volk.h>
 
 #include <vector>
+#include <memory>
 
 namespace mcvk::Renderer {
     class Renderer {
@@ -27,6 +28,8 @@ namespace mcvk::Renderer {
         Renderer &operator=(const Renderer &) = delete;
 
     private:
+        void _CreatePipelines();
+
         std::vector<ShaderInfo> _GetShaders();
 
         const Window &_window;
@@ -34,6 +37,7 @@ namespace mcvk::Renderer {
 
         InstanceManager _instance_mgr;
         Device _device;
-        GraphicsPipeline _graphics_pipeline;
+
+        std::unique_ptr<GraphicsPipeline> _default_pipeline;
     };
 }

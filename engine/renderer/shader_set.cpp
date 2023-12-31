@@ -37,6 +37,25 @@ namespace mcvk::Renderer {
         }
     }
 
+    std::vector<VkPipelineShaderStageCreateInfo> ShaderSet::BuildShaderStageInfos() {
+        std::vector<VkPipelineShaderStageCreateInfo> infos(_shader_modules.size());
+
+        uint32_t i = 0;
+        for (auto &[stage, mod] : _shader_modules) {
+            infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            infos[i].pNext = nullptr;
+            infos[i].flags = 0;
+            infos[i].stage = stage;
+            infos[i].module = mod;
+            infos[i].pName = "main";
+            infos[i].pSpecializationInfo = nullptr;
+
+            i++;
+        }
+
+        return infos;
+    }
+
     std::vector<char> ShaderSet::_ReadFile(const std::string &path) {
         std::ifstream file{path, std::ios::ate | std::ios::binary};
 
