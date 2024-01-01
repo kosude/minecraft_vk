@@ -7,7 +7,7 @@
 
 #include "graphics_pipeline.hpp"
 
-#include "renderer/model.hpp"
+#include "renderer/data/model.hpp"
 
 #include "utils/log.hpp"
 
@@ -102,6 +102,10 @@ namespace mcvk::Renderer {
     GraphicsPipeline::~GraphicsPipeline() {
         vkDestroyPipelineLayout(_device.GetDevice(), _layout, nullptr);
         vkDestroyPipeline(_device.GetDevice(), _pipeline, nullptr);
+    }
+
+    void GraphicsPipeline::CmdBind(VkCommandBuffer cmdbuf) {
+        vkCmdBindPipeline(cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
     }
 
     void GraphicsPipeline::_BuildLayout() {

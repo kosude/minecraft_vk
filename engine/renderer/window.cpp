@@ -25,16 +25,6 @@ namespace mcvk::Renderer {
         glfwTerminate();
     }
 
-    VkSurfaceKHR Window::CreateSurface(VkInstance instance) const {
-        VkSurfaceKHR surface;
-        if (glfwCreateWindowSurface(instance, _window, nullptr, &surface) != VK_SUCCESS) {
-            Utils::Fatal("Failed to create window surface");
-            return VK_NULL_HANDLE;
-        }
-
-        return surface;
-    }
-
     bool Window::Update() {
         glfwPollEvents();
 
@@ -51,6 +41,23 @@ namespace mcvk::Renderer {
         return extensions;
     }
 
+    VkSurfaceKHR Window::CreateSurface(VkInstance instance) const {
+        VkSurfaceKHR surface;
+        if (glfwCreateWindowSurface(instance, _window, nullptr, &surface) != VK_SUCCESS) {
+            Utils::Fatal("Failed to create window surface");
+            return VK_NULL_HANDLE;
+        }
+
+        return surface;
+    }
+
+    void Window::_FramebufferResizeCallback(GLFWwindow *window, int width, int height) {
+        auto win = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        win->_framebuffer_resized = true;
+        win->_width = width;
+        win->_height = height;
+    }
+
     void Window::_InitGLFWWindow() {
         if (!GLFW_ERRCALLBACK_SET) {
             glfwSetErrorCallback([](int error_code, const char* description) {
@@ -65,12 +72,14 @@ namespace mcvk::Renderer {
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         _window = glfwCreateWindow(_width, _height, _name.c_str(), nullptr, nullptr);
         if (!_window) {
             Utils::Fatal("Failed to create GLFW window object");
             return;
         }
+        glfwSetWindowUserPointer(_window, this);
+        glfwSetFramebufferSizeCallback(_window, _FramebufferResizeCallback);
     }
 }

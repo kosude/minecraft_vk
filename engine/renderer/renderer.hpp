@@ -8,6 +8,7 @@
 #pragma once
 
 #include "renderer/pipeline/graphics_pipeline.hpp"
+#include "renderer/command_buffer.hpp"
 #include "renderer/device.hpp"
 #include "renderer/instance_manager.hpp"
 #include "renderer/shader_set.hpp"
@@ -28,19 +29,15 @@ namespace mcvk::Renderer {
         Renderer(const Renderer &) = delete;
         Renderer &operator=(const Renderer &) = delete;
 
-        inline const VkCommandBuffer &GetCurrentDrawCommandBuffer() const { return _draw_command_buffers[_current_frame_index]; }
+        inline const GraphicsPipeline &GetDefaultGraphicsPipeline() const { return *_default_pipeline; }
 
         void WaitDeviceIdle();
 
-        VkCommandBuffer BeginDrawCommandBuffer();
-        void EndDrawCommandBuffer();
-
-        void CmdBeginRenderPass(VkCommandBuffer cmdbuf);
-        void CmdEndRenderPass(VkCommandBuffer cmdbuf);
-
-        void CmdUpdateViewportAndScissor(VkCommandBuffer cmdbuf);
+        CommandBuffer *BeginDrawCommandBuffer();
 
     private:
+        friend class CommandBuffer;
+
         void _RecreateSwapchain();
         void _CreatePipelines();
         void _CreateCommandBuffers();
@@ -54,11 +51,7 @@ namespace mcvk::Renderer {
         Device _device;
 
         std::unique_ptr<Swapchain> _swapchain;
-        std::vector<VkCommandBuffer> _draw_command_buffers;
-
-        uint32_t _current_image_index{0};
-        int32_t _current_frame_index{0};
-        bool _frame_started{false};
+        CommandBuffer _draw_command_buffer;
 
         std::unique_ptr<GraphicsPipeline> _default_pipeline;
     };

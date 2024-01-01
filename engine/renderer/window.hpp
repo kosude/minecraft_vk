@@ -26,17 +26,21 @@ namespace mcvk::Renderer {
         bool Update();
 
         inline VkExtent2D GetExtent() const { return { static_cast<uint32_t>(_width), static_cast<uint32_t>(_height) }; }
+        inline const bool &WasResized() const { return _framebuffer_resized; }
         static std::vector<const char *> GetGLFWRequiredExtensions();
 
         VkSurfaceKHR CreateSurface(VkInstance instance) const;
 
     private:
+        static void _FramebufferResizeCallback(GLFWwindow *window, int width, int height);
+
         void _InitGLFWWindow();
 
         GLFWwindow *_window;
 
-        const int _width;
-        const int _height;
+        int _width;
+        int _height;
+        bool _framebuffer_resized = false;
 
         const std::string _name;
     };

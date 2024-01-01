@@ -45,6 +45,8 @@ namespace mcvk::Renderer {
         inline const VkGraphicsPipelineCreateInfo &GetCreateInfo() const { return _info; }
         inline const VkPipeline &GetPipeline() const { return _pipeline; }
 
+        void CmdBind(VkCommandBuffer cmdbuf);
+
     private:
         friend class PipelineFactory;
 

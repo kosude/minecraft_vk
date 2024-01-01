@@ -174,18 +174,16 @@ namespace mcvk::Renderer {
 
         _swapchain_image_format = surface_format.format;
         _swapchain_extent = extent;
-
-        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &image_count, nullptr);
-        _swapchain_images.resize(image_count);
-
-        Utils::Info("Created swap chain with " + std::to_string(_swapchain_images.size()) + " images");
     }
 
     void Swapchain::_ManageSwapchainImages() {
-        uint32_t img_count_buf; // unused, just required by vkGetSwapchainImagesKHR
+        uint32_t img_count;
 
-        VkImage sc_images[_swapchain_images.size()];
-        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &img_count_buf, sc_images);
+        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &img_count, nullptr);
+        _swapchain_images.resize(img_count);
+
+        VkImage sc_images[img_count];
+        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &img_count, sc_images);
 
         // create image objects for each image, also creating image views
         auto image_config = Image::Config::Defaults(_swapchain_extent, _swapchain_image_format);

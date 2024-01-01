@@ -25,13 +25,14 @@ namespace mcvk::Game {
             }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
-                _renderer.CmdBeginRenderPass(drawbuf);
+                drawbuf->BeginRenderPass();
 
+                drawbuf->UpdateViewportAndScissor();
 
+                drawbuf->BindPipeline(_renderer.GetDefaultGraphicsPipeline());
 
-                _renderer.CmdEndRenderPass(drawbuf);
-
-                _renderer.EndDrawCommandBuffer();
+                drawbuf->EndRenderPass();
+                drawbuf->End();
             }
         }
 

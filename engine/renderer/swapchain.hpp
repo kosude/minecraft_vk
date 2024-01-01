@@ -22,6 +22,9 @@ namespace mcvk::Renderer {
         Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::shared_ptr<Swapchain> old);
         ~Swapchain();
 
+        Swapchain(const Swapchain &) = delete;
+        Swapchain &operator=(const Swapchain &) = delete;
+
         inline const VkRenderPass &GetRenderPass() const { return _render_pass; }
         inline const VkFramebuffer &GetFramebuffer(uint32_t index) const { return _swapchain_framebuffers[index]; }
         inline const VkExtent2D &GetExtent() const { return _swapchain_extent; }
