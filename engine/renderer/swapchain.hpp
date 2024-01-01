@@ -67,6 +67,6 @@ namespace mcvk::Renderer {
         std::vector<VkSemaphore> _draw_complete_sems;
         std::vector<VkFence> _in_flight_fences;
         std::vector<VkFence> _images_in_flight;
-        size_t _current_frame;
+        size_t _current_frame{0};
     };
 }

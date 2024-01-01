@@ -95,7 +95,7 @@ namespace mcvk::Renderer {
         info.renderArea.offset = { 0, 0 };
 
         std::array<VkClearValue, 2> clear{};
-        clear[0].color = { 0.4, 0.7, 1.0 };
+        clear[0].color = { 0.0, 0.0, 0.0 };
         clear[1].depthStencil = { 1, 0 };
         info.clearValueCount = static_cast<uint32_t>(clear.size());
         info.pClearValues = clear.data();
