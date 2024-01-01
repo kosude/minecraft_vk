@@ -7,28 +7,32 @@
 
 #include "renderer.hpp"
 
+#include "renderer/pipeline/pipeline_factory.hpp"
 #include "renderer/window.hpp"
 #include "utils/log.hpp"
 
 namespace mcvk::Renderer {
     Renderer::Renderer(const Window &window)
         : _window{window},
-        _instance_mgr{window, _surface},
-        _device{window, _instance_mgr.Instance(), _surface} {
+        _instance_mgr{window},
+        _surface{_instance_mgr.GetSurface()},
+        _device{window, _instance_mgr.GetInstance(), _surface} {
         _RecreateSwapchain();
         _CreatePipelines();
     }
 
     Renderer::~Renderer() {
-        vkDestroySurfaceKHR(_instance_mgr.Instance(), _surface, nullptr);
     }
 
     void Renderer::_CreatePipelines() {
         std::vector<ShaderInfo> shaders = _GetShaders();
 
         auto config = GraphicsPipeline::Config::Defaults();
+        config.render_pass = _swapchain->GetRenderPass();
 
         _default_pipeline = std::make_unique<GraphicsPipeline>(_device, shaders, config);
+
+        PipelineFactory::BuildPipelines(_device, { _default_pipeline.get() });
     }
 
     void Renderer::_RecreateSwapchain() {

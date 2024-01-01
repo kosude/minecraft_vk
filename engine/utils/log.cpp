@@ -15,6 +15,10 @@
 static std::string __GetCurrentDateTime(const bool with_time);
 
 namespace mcvk::Utils {
+    void ResetLogColour() {
+        ciocolstatedef(stdout);
+    }
+
     void Log(const std::string &msg) {
         // verbose messages not shown in release
 #       ifdef DEBUG

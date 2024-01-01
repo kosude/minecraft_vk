@@ -17,14 +17,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL __DebugCallback(VkDebugUtilsMessageSeverit
     const VkDebugUtilsMessengerCallbackDataEXT *data, void *user);
 
 namespace mcvk::Renderer {
-    InstanceManager::InstanceManager(const mcvk::Renderer::Window &window, VkSurfaceKHR &surface) {
+    InstanceManager::InstanceManager(const mcvk::Renderer::Window &window) {
         _CreateInstance();
         _CreateDebugMessenger();
-
-        surface = _CreateSurface(window);
+        _CreateSurface(window);
     }
 
     InstanceManager::~InstanceManager() {
+        vkDestroySurfaceKHR(_instance, _surface, nullptr);
+
 #       ifdef DEBUG
             vkDestroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr);
 #       endif
@@ -94,14 +95,14 @@ namespace mcvk::Renderer {
             _PopulateDebugMessengerCreateInfo(debug_messenger_info);
 
             if (vkCreateDebugUtilsMessengerEXT(_instance, &debug_messenger_info, nullptr, &_debug_messenger)) {
-                Utils::Error("Failed to create Vulkan debug messenger");
+                Utils::Fatal("Failed to create Vulkan debug messenger");
             }
 #       endif
         return;
     }
 
-    VkSurfaceKHR InstanceManager::_CreateSurface(const Window &window) {
-        return window.CreateSurface(_instance);
+    void InstanceManager::_CreateSurface(const Window &window) {
+        _surface = window.CreateSurface(_instance);
     }
 
     std::vector<const char *> InstanceManager::_GetRequiredExtensions() {

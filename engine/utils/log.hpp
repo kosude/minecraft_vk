@@ -10,6 +10,8 @@
 #include <iostream>
 
 namespace mcvk::Utils {
+    void ResetLogColour();
+
     void Log(const std::string &msg);
     void Info(const std::string &msg);
     void Warn(const std::string &msg);

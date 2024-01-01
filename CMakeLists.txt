@@ -18,9 +18,11 @@ set(C_CPP_SOURCES
     "game/game.cpp"
     "game/main.cpp"
 
+    "engine/renderer/buffer/image.cpp"
+    "engine/renderer/pipeline/graphics_pipeline.cpp"
+    "engine/renderer/pipeline/pipeline_factory.cpp"
     "engine/renderer/device.cpp"
     "engine/renderer/instance_manager.cpp"
-    "engine/renderer/graphics_pipeline.cpp"
     "engine/renderer/renderer.cpp"
     "engine/renderer/model.cpp"
     "engine/renderer/shader_set.cpp"

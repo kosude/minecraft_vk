@@ -13,6 +13,8 @@
 using namespace mcvk;
 
 int main(int argc, char **argv) {
+    Utils::ResetLogColour();
+
     try {
         Game::Game game{};
 

@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include "renderer/pipeline/graphics_pipeline.hpp"
 #include "renderer/device.hpp"
 #include "renderer/instance_manager.hpp"
-#include "renderer/graphics_pipeline.hpp"
 #include "renderer/shader_set.hpp"
 #include "renderer/swapchain.hpp"
 #include "renderer/window.hpp"
@@ -35,7 +35,7 @@ namespace mcvk::Renderer {
         std::vector<ShaderInfo> _GetShaders();
 
         const Window &_window;
-        VkSurfaceKHR _surface;
+        const VkSurfaceKHR &_surface;
 
         InstanceManager _instance_mgr;
         Device _device;

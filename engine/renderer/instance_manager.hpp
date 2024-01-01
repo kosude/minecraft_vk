@@ -16,18 +16,19 @@
 namespace mcvk::Renderer {
     class InstanceManager {
     public:
-        InstanceManager(const Window &window, VkSurfaceKHR &surface);
+        InstanceManager(const Window &window);
         ~InstanceManager();
 
         InstanceManager(const InstanceManager &) = delete;
         InstanceManager &operator=(const InstanceManager &) = delete;
 
-        const VkInstance &Instance() const { return _instance; }
+        const VkInstance &GetInstance() const { return _instance; }
+        const VkSurfaceKHR &GetSurface() const { return _surface; }
 
     private:
         void _CreateInstance();
         void _CreateDebugMessenger();
-        VkSurfaceKHR _CreateSurface(const Window &window);
+        void _CreateSurface(const Window &window);
 
         std::vector<const char *> _GetRequiredExtensions();
         bool _CheckExtensionsSupport(const std::vector<const char *> &required);
@@ -35,6 +36,7 @@ namespace mcvk::Renderer {
         void _PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create_info);
 
         VkInstance _instance;
+        VkSurfaceKHR _surface;
 
 #       ifdef DEBUG
             VkDebugUtilsMessengerEXT _debug_messenger;

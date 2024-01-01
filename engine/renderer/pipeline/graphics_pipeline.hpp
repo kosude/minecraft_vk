@@ -28,9 +28,10 @@ namespace mcvk::Renderer {
             std::vector<VkDynamicState> dynamic_states;
             VkPipelineDynamicStateCreateInfo dynamic_state_info;
 
-            VkPipelineLayout layout = nullptr;
             VkRenderPass render_pass = nullptr;
             uint32_t subpass = 0;
+
+            std::vector<VkPushConstantRange> push_constant_ranges;
 
             static Config Defaults();
         };
@@ -41,12 +42,29 @@ namespace mcvk::Renderer {
         GraphicsPipeline(const GraphicsPipeline &) = delete;
         GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
 
+        inline const VkGraphicsPipelineCreateInfo &GetCreateInfo() const { return _info; }
+        inline const VkPipeline &GetPipeline() const { return _pipeline; }
+
     private:
-        void _CreateGraphicsPipeline(const Config &config);
+        friend class PipelineFactory;
+
+        void _BuildLayout();
+        void _BuildCreateInfo();
 
         const Device &_device;
 
         ShaderSet _shader_set;
+        VkPipelineLayout _layout;
         VkPipeline _pipeline;
+
+        Config _config;
+
+        VkGraphicsPipelineCreateInfo _info{};
+
+        std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;
+
+        std::vector<VkVertexInputBindingDescription> _vertex_bindings;
+        std::vector<VkVertexInputAttributeDescription> _vertex_attribs;
+        VkPipelineVertexInputStateCreateInfo _vertex_input_info{};
     };
 }

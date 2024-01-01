@@ -86,56 +86,67 @@ namespace mcvk::Renderer {
         config.dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(config.dynamic_states.size());
         config.dynamic_state_info.flags = 0;
 
+        config.push_constant_ranges = {};
+
         return config;
     }
 
     GraphicsPipeline::GraphicsPipeline(const Device &device, const std::vector<ShaderInfo> &shaders, const Config &config)
-        : _device(device), _shader_set(device.LogicalDevice(), shaders) {
-        Utils::Info("Hooking up new graphics pipeline with " + std::to_string(shaders.size()) + " shaders...");
+        : _device{device}, _shader_set{device.LogicalDevice(), shaders}, _config{config} {
+        Utils::Info("Configuring graphics pipeline with " + std::to_string(shaders.size()) + " shaders...");
 
-        _CreateGraphicsPipeline(config);
+        _BuildLayout();
+        _BuildCreateInfo();
     }
 
     GraphicsPipeline::~GraphicsPipeline() {
+        vkDestroyPipelineLayout(_device.LogicalDevice(), _layout, nullptr);
         vkDestroyPipeline(_device.LogicalDevice(), _pipeline, nullptr);
     }
 
-    void GraphicsPipeline::_CreateGraphicsPipeline(const Config &config) {
-        std::vector<VkPipelineShaderStageCreateInfo> shader_stages = _shader_set.BuildShaderStageInfos();
+    void GraphicsPipeline::_BuildLayout() {
+        VkPipelineLayoutCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        info.setLayoutCount = 0;
+        info.pSetLayouts = nullptr;
+        info.pushConstantRangeCount = static_cast<uint32_t>(_config.push_constant_ranges.size());
+        info.pPushConstantRanges = _config.push_constant_ranges.data();
 
-        VkPipelineVertexInputStateCreateInfo vertex_input_info;
-        auto binding_descrs = Model::Vertex::GetBindingDescriptions();
-        auto attribute_descrs = Model::Vertex::GetAttributeDescriptions();
-        vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_info.pNext = nullptr;
-        vertex_input_info.flags = 0;
-        vertex_input_info.vertexBindingDescriptionCount = static_cast<uint32_t>(binding_descrs.size());
-        vertex_input_info.pVertexBindingDescriptions = binding_descrs.data();
-        vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descrs.size());
-        vertex_input_info.pVertexAttributeDescriptions = attribute_descrs.data();
-
-        VkGraphicsPipelineCreateInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        info.stageCount = static_cast<uint32_t>(shader_stages.size());
-        info.pStages = shader_stages.data();
-        info.pVertexInputState = &vertex_input_info;
-        info.pInputAssemblyState = &config.input_assembly_info;
-        info.pViewportState = &config.viewport_info;
-        info.pRasterizationState = &config.rasterization_info;
-        info.pMultisampleState = &config.multisample_info;
-        info.pColorBlendState = &config.color_blend_info;
-        info.pDepthStencilState = &config.depth_stencil_info;
-        info.pDynamicState = &config.dynamic_state_info;
-
-        info.layout = config.layout;
-        info.renderPass = config.render_pass;
-        info.subpass = config.subpass;
-
-        info.basePipelineIndex = -1;
-        info.basePipelineHandle = VK_NULL_HANDLE;
-
-        if (vkCreateGraphicsPipelines(_device.LogicalDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &_pipeline) != VK_SUCCESS) {
-            Utils::Fatal("Failed to create graphics pipeline");
+        if (vkCreatePipelineLayout(_device.LogicalDevice(), &info, nullptr, &_layout) != VK_SUCCESS) {
+            Utils::Fatal("Failed to create graphics pipeline layout");
         }
+    }
+
+    void GraphicsPipeline::_BuildCreateInfo() {
+        _shader_stages = _shader_set.BuildShaderStageInfos();
+
+        _vertex_bindings = Model::Vertex::GetBindingDescriptions();
+        _vertex_attribs = Model::Vertex::GetAttributeDescriptions();
+        _vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        _vertex_input_info.pNext = nullptr;
+        _vertex_input_info.flags = 0;
+        _vertex_input_info.vertexBindingDescriptionCount = static_cast<uint32_t>(_vertex_bindings.size());
+        _vertex_input_info.pVertexBindingDescriptions = _vertex_bindings.data();
+        _vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(_vertex_attribs.size());
+        _vertex_input_info.pVertexAttributeDescriptions = _vertex_attribs.data();
+
+        _info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        _info.stageCount = static_cast<uint32_t>(_shader_stages.size());
+        _info.pStages = _shader_stages.data();
+        _info.pVertexInputState = &_vertex_input_info;
+        _info.pInputAssemblyState = &_config.input_assembly_info;
+        _info.pViewportState = &_config.viewport_info;
+        _info.pRasterizationState = &_config.rasterization_info;
+        _info.pMultisampleState = &_config.multisample_info;
+        _info.pColorBlendState = &_config.color_blend_info;
+        _info.pDepthStencilState = &_config.depth_stencil_info;
+        _info.pDynamicState = &_config.dynamic_state_info;
+
+        _info.layout = _layout;
+        _info.renderPass = _config.render_pass;
+        _info.subpass = _config.subpass;
+
+        _info.basePipelineIndex = -1;
+        _info.basePipelineHandle = VK_NULL_HANDLE;
     }
 }

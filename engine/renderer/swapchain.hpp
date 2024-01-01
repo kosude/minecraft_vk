@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include "renderer/buffer/image.hpp"
 #include "renderer/device.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace mcvk::Renderer {
     class Swapchain {
@@ -18,26 +20,33 @@ namespace mcvk::Renderer {
         Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::shared_ptr<Swapchain> old);
         ~Swapchain();
 
-        inline bool CompareSwapFormats(const Swapchain &swapchain) const {
-            return
-                // TODO create depth images (aka depth buffers)
-                // swapchain._depth_image_format_      == _depth_image_format &&
-                swapchain._swapchain_image_format   == _swapchain_image_format;
-        }
+        inline VkRenderPass GetRenderPass() const { return _render_pass; }
+
+        bool CompareSwapFormats(const Swapchain &swapchain) const;
 
     private:
         void _Init();
 
         void _CreateSwapchain();
+        void _ManageSwapchainImages();
+        void _CreateDepthImages();
+        void _CreateRenderPass();
+        void _CreateFramebuffers();
 
         VkSurfaceFormatKHR _ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &candidates);
         VkPresentModeKHR _ChoosePresentMode(const std::vector<VkPresentModeKHR> &candidates);
         VkExtent2D _ChooseExtent(const VkSurfaceCapabilitiesKHR &caps);
+        VkFormat _FindDepthImageFormat();
 
-        VkFormat _swapchain_image_format;
         VkExtent2D _swapchain_extent;
+        VkFormat _swapchain_image_format;
+        VkFormat _depth_image_format;
 
-        std::vector<VkImage> _swapchain_images;
+        VkRenderPass _render_pass;
+        std::vector<VkFramebuffer> _swapchain_framebuffers;
+
+        std::vector<std::unique_ptr<Image>> _swapchain_images;
+        std::vector<std::unique_ptr<Image>> _depth_images;
 
         const Device &_device;
         const VkSurfaceKHR &_surface;

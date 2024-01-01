@@ -38,12 +38,13 @@ namespace mcvk::Renderer {
         Device(Device &&) = delete;
         Device &operator=(Device &&) = delete;
 
-        void Destroy();
-
         inline const VkDevice &LogicalDevice() const { return _device; }
         inline const VkPhysicalDeviceProperties &Properties() const { return _properties; }
         inline SwapChainSupportDetails SwapchainSupportDetails() const { return _QuerySwapChainSupport(_physical_device); }
         inline QueueFamilyIndices FindQueueFamilyIndices() const { return _FindQueueFamilies(_physical_device); }
+
+        uint32_t FindMemoryType(uint32_t filter, VkMemoryPropertyFlags properties) const;
+        VkFormat FindSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
     private:
         void _PickPhysicalDevice();
