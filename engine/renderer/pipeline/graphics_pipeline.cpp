@@ -92,7 +92,7 @@ namespace mcvk::Renderer {
     }
 
     GraphicsPipeline::GraphicsPipeline(const Device &device, const std::vector<ShaderInfo> &shaders, const Config &config)
-        : _device{device}, _shader_set{device.LogicalDevice(), shaders}, _config{config} {
+        : _device{device}, _shader_set{device.GetDevice(), shaders}, _config{config} {
         Utils::Info("Configuring graphics pipeline with " + std::to_string(shaders.size()) + " shaders...");
 
         _BuildLayout();
@@ -100,8 +100,8 @@ namespace mcvk::Renderer {
     }
 
     GraphicsPipeline::~GraphicsPipeline() {
-        vkDestroyPipelineLayout(_device.LogicalDevice(), _layout, nullptr);
-        vkDestroyPipeline(_device.LogicalDevice(), _pipeline, nullptr);
+        vkDestroyPipelineLayout(_device.GetDevice(), _layout, nullptr);
+        vkDestroyPipeline(_device.GetDevice(), _pipeline, nullptr);
     }
 
     void GraphicsPipeline::_BuildLayout() {
@@ -112,7 +112,7 @@ namespace mcvk::Renderer {
         info.pushConstantRangeCount = static_cast<uint32_t>(_config.push_constant_ranges.size());
         info.pPushConstantRanges = _config.push_constant_ranges.data();
 
-        if (vkCreatePipelineLayout(_device.LogicalDevice(), &info, nullptr, &_layout) != VK_SUCCESS) {
+        if (vkCreatePipelineLayout(_device.GetDevice(), &info, nullptr, &_layout) != VK_SUCCESS) {
             Utils::Fatal("Failed to create graphics pipeline layout");
         }
     }

@@ -21,7 +21,7 @@ namespace mcvk::Renderer {
         std::vector<VkPipeline> vk_pipelines(pipelines.size());
 
         // batch create pipelines
-        if (vkCreateGraphicsPipelines(device.LogicalDevice(), VK_NULL_HANDLE, static_cast<uint32_t>(pipeline_infos.size()),
+        if (vkCreateGraphicsPipelines(device.GetDevice(), VK_NULL_HANDLE, static_cast<uint32_t>(pipeline_infos.size()),
             pipeline_infos.data(), nullptr, vk_pipelines.data()) != VK_SUCCESS) {
             Utils::Fatal("Failed to create graphics pipeline");
         }

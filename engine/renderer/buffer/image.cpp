@@ -55,41 +55,41 @@ namespace mcvk::Renderer {
     }
 
     Image::~Image() {
-        vkDestroyImageView(_device.LogicalDevice(), _image_view, nullptr);
+        vkDestroyImageView(_device.GetDevice(), _image_view, nullptr);
 
         if (_memory != VK_NULL_HANDLE) {
             // if memory is NULL, then we assume the image was passed directly to the ctor and is therefore handled elsewhere, e.g. by a swapchain
-            vkDestroyImage(_device.LogicalDevice(), _image, nullptr);
+            vkDestroyImage(_device.GetDevice(), _image, nullptr);
 
-            vkFreeMemory(_device.LogicalDevice(), _memory, nullptr);
+            vkFreeMemory(_device.GetDevice(), _memory, nullptr);
         }
     }
 
     void Image::_AllocImage() {
-        if (vkCreateImage(_device.LogicalDevice(), &_config.image_info, nullptr, &_image) != VK_SUCCESS) {
+        if (vkCreateImage(_device.GetDevice(), &_config.image_info, nullptr, &_image) != VK_SUCCESS) {
             Utils::Fatal("Failed to create image");
         }
         _config.view_info.image = _image;
 
         VkMemoryRequirements requirements;
-        vkGetImageMemoryRequirements(_device.LogicalDevice(), _image, &requirements);
+        vkGetImageMemoryRequirements(_device.GetDevice(), _image, &requirements);
 
         VkMemoryAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         alloc_info.allocationSize = requirements.size;
         alloc_info.memoryTypeIndex = _device.FindMemoryType(requirements.memoryTypeBits, _config.mem_props);
 
-        if (vkAllocateMemory(_device.LogicalDevice(), &alloc_info, nullptr, &_memory) != VK_SUCCESS) {
+        if (vkAllocateMemory(_device.GetDevice(), &alloc_info, nullptr, &_memory) != VK_SUCCESS) {
             Utils::Fatal("Failed to allocate device memory for image");
         }
 
-        if (vkBindImageMemory(_device.LogicalDevice(), _image, _memory, 0) != VK_SUCCESS) {
+        if (vkBindImageMemory(_device.GetDevice(), _image, _memory, 0) != VK_SUCCESS) {
             Utils::Fatal("Failed to bind image to device memory");
         }
     }
 
     void Image::_CreateImageView() {
-        if (vkCreateImageView(_device.LogicalDevice(), &_config.view_info, nullptr, &_image_view) != VK_SUCCESS) {
+        if (vkCreateImageView(_device.GetDevice(), &_config.view_info, nullptr, &_image_view) != VK_SUCCESS) {
             Utils::Fatal("Failed to create image view");
         }
     }

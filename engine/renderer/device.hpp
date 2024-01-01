@@ -38,8 +38,12 @@ namespace mcvk::Renderer {
         Device(Device &&) = delete;
         Device &operator=(Device &&) = delete;
 
-        inline const VkDevice &LogicalDevice() const { return _device; }
-        inline const VkPhysicalDeviceProperties &Properties() const { return _properties; }
+        inline const VkDevice &GetDevice() const { return _device; }
+        inline const VkPhysicalDeviceProperties &GetProperties() const { return _properties; }
+        inline const VkCommandPool &GetGraphicsCommandPool() const { return _graphics_command_pool; }
+        inline const VkCommandPool &GetTransferCommandPool() const { return _transfer_command_pool; }
+        inline const VkQueue &GetGraphicsQueue() const { return _graphics_queue; }
+        inline const VkQueue &GetPresentQueue() const { return _present_queue; }
         inline SwapChainSupportDetails SwapchainSupportDetails() const { return _QuerySwapChainSupport(_physical_device); }
         inline QueueFamilyIndices FindQueueFamilyIndices() const { return _FindQueueFamilies(_physical_device); }
 

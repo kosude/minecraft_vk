@@ -28,9 +28,22 @@ namespace mcvk::Renderer {
         Renderer(const Renderer &) = delete;
         Renderer &operator=(const Renderer &) = delete;
 
+        inline const VkCommandBuffer &GetCurrentDrawCommandBuffer() const { return _draw_command_buffers[_current_frame_index]; }
+
+        void WaitDeviceIdle();
+
+        VkCommandBuffer BeginDrawCommandBuffer();
+        void EndDrawCommandBuffer();
+
+        void CmdBeginRenderPass(VkCommandBuffer cmdbuf);
+        void CmdEndRenderPass(VkCommandBuffer cmdbuf);
+
+        void CmdUpdateViewportAndScissor(VkCommandBuffer cmdbuf);
+
     private:
         void _RecreateSwapchain();
         void _CreatePipelines();
+        void _CreateCommandBuffers();
 
         std::vector<ShaderInfo> _GetShaders();
 
@@ -41,6 +54,11 @@ namespace mcvk::Renderer {
         Device _device;
 
         std::unique_ptr<Swapchain> _swapchain;
+        std::vector<VkCommandBuffer> _draw_command_buffers;
+
+        uint32_t _current_image_index{0};
+        int32_t _current_frame_index{0};
+        bool _frame_started{false};
 
         std::unique_ptr<GraphicsPipeline> _default_pipeline;
     };

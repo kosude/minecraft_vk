@@ -28,21 +28,27 @@ namespace mcvk::Renderer {
     }
 
     Swapchain::~Swapchain() {
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroySemaphore(_device.GetDevice(), _image_available_sems[i], nullptr);
+            vkDestroySemaphore(_device.GetDevice(), _draw_complete_sems[i], nullptr);
+            vkDestroyFence(_device.GetDevice(), _in_flight_fences[i], nullptr);
+        }
+
         // explicitly free swapchain image objects as they are child objects of the swapchain (created as part of vkCreateSwapchainKHR)
         for (auto &imgptr : _swapchain_images) {
             imgptr.reset();
         }
 
         if (_swapchain) {
-            vkDestroySwapchainKHR(_device.LogicalDevice(), _swapchain, nullptr);
+            vkDestroySwapchainKHR(_device.GetDevice(), _swapchain, nullptr);
             _swapchain = nullptr;
         }
 
         for (auto framebuffer : _swapchain_framebuffers) {
-            vkDestroyFramebuffer(_device.LogicalDevice(), framebuffer, nullptr);
+            vkDestroyFramebuffer(_device.GetDevice(), framebuffer, nullptr);
         }
 
-        vkDestroyRenderPass(_device.LogicalDevice(), _render_pass, nullptr);
+        vkDestroyRenderPass(_device.GetDevice(), _render_pass, nullptr);
     }
 
     bool Swapchain::CompareSwapFormats(const Swapchain &swapchain) const {
@@ -51,12 +57,71 @@ namespace mcvk::Renderer {
             swapchain._swapchain_image_format   == _swapchain_image_format;
     }
 
+    VkResult Swapchain::AcquireNextImage(uint32_t *const image_index) {
+        vkWaitForFences(_device.GetDevice(), 1, &_in_flight_fences[_current_frame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+
+        VkResult result = vkAcquireNextImageKHR(
+            _device.GetDevice(),
+            _swapchain,
+            std::numeric_limits<uint64_t>::max(),
+            _image_available_sems[_current_frame],
+            VK_NULL_HANDLE,
+            image_index);
+
+        return result;
+    }
+
+    VkResult Swapchain::SubmitCommandBuffers(const std::vector<VkCommandBuffer> &cmdbufs, uint32_t *const image_index) {
+        uint32_t iindex = *image_index;
+
+        if (_images_in_flight[iindex] != VK_NULL_HANDLE) {
+            vkWaitForFences(_device.GetDevice(), 1, &_images_in_flight[iindex], VK_TRUE, std::numeric_limits<uint64_t>::max());
+        }
+        _images_in_flight[iindex] = _in_flight_fences[_current_frame];
+
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = &_image_available_sems[_current_frame];
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &_draw_complete_sems[_current_frame];
+
+        VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submit_info.pWaitDstStageMask = wait_stages;
+
+        submit_info.commandBufferCount = static_cast<uint32_t>(cmdbufs.size());
+        submit_info.pCommandBuffers = cmdbufs.data();
+
+        vkResetFences(_device.GetDevice(), 1, &_in_flight_fences[_current_frame]);
+        if (vkQueueSubmit(_device.GetGraphicsQueue(), 1, &submit_info, _in_flight_fences[_current_frame]) != VK_SUCCESS) {
+            Utils::Fatal("Failed to submit draw command buffer operations to graphics queue");
+        }
+
+        VkPresentInfoKHR present_info{};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        // wait for draw_complete semaphore (i.e. wait for GPU rendering to be complete)
+        present_info.waitSemaphoreCount = 1;
+        present_info.pWaitSemaphores = &_draw_complete_sems[_current_frame];
+
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &_swapchain;
+
+        present_info.pImageIndices = image_index;
+
+        _current_frame = (_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        return vkQueuePresentKHR(_device.GetPresentQueue(), &present_info);
+    }
+
     void Swapchain::_Init() {
         _CreateSwapchain();
         _ManageSwapchainImages();
         _CreateDepthImages();
         _CreateRenderPass();
         _CreateFramebuffers();
+        _CreateSynchronisationPrims();
     }
 
     void Swapchain::_CreateSwapchain() {
@@ -103,14 +168,14 @@ namespace mcvk::Renderer {
 
         info.oldSwapchain = (_old_swapchain) ? _old_swapchain->_swapchain : VK_NULL_HANDLE;
 
-        if (vkCreateSwapchainKHR(_device.LogicalDevice(), &info, nullptr, &_swapchain)) {
+        if (vkCreateSwapchainKHR(_device.GetDevice(), &info, nullptr, &_swapchain)) {
             Utils::Fatal("Failed to create swap chain");
         }
 
         _swapchain_image_format = surface_format.format;
         _swapchain_extent = extent;
 
-        vkGetSwapchainImagesKHR(_device.LogicalDevice(), _swapchain, &image_count, nullptr);
+        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &image_count, nullptr);
         _swapchain_images.resize(image_count);
 
         Utils::Info("Created swap chain with " + std::to_string(_swapchain_images.size()) + " images");
@@ -120,7 +185,7 @@ namespace mcvk::Renderer {
         uint32_t img_count_buf; // unused, just required by vkGetSwapchainImagesKHR
 
         VkImage sc_images[_swapchain_images.size()];
-        vkGetSwapchainImagesKHR(_device.LogicalDevice(), _swapchain, &img_count_buf, sc_images);
+        vkGetSwapchainImagesKHR(_device.GetDevice(), _swapchain, &img_count_buf, sc_images);
 
         // create image objects for each image, also creating image views
         auto image_config = Image::Config::Defaults(_swapchain_extent, _swapchain_image_format);
@@ -195,7 +260,7 @@ namespace mcvk::Renderer {
         render_pass_info.dependencyCount = 1;
         render_pass_info.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(_device.LogicalDevice(), &render_pass_info, nullptr, &_render_pass) != VK_SUCCESS) {
+        if (vkCreateRenderPass(_device.GetDevice(), &render_pass_info, nullptr, &_render_pass) != VK_SUCCESS) {
             Utils::Fatal("Failed to create render pass");
         }
     }
@@ -217,8 +282,30 @@ namespace mcvk::Renderer {
             info.height = _swapchain_extent.height;
             info.layers = 1;
 
-            if (vkCreateFramebuffer(_device.LogicalDevice(), &info, nullptr, &_swapchain_framebuffers[i]) != VK_SUCCESS) {
+            if (vkCreateFramebuffer(_device.GetDevice(), &info, nullptr, &_swapchain_framebuffers[i]) != VK_SUCCESS) {
                 Utils::Fatal("Failed to create framebuffer for image attachment index " + std::to_string(i));
+            }
+        }
+    }
+
+    void Swapchain::_CreateSynchronisationPrims() {
+        _image_available_sems.resize(MAX_FRAMES_IN_FLIGHT);
+        _draw_complete_sems.resize(MAX_FRAMES_IN_FLIGHT);
+        _in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+        _images_in_flight.resize(_swapchain_images.size(), VK_NULL_HANDLE);
+
+        VkSemaphoreCreateInfo sem_info{};
+        sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fence_info{};
+        fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_image_available_sems[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_draw_complete_sems[i]) != VK_SUCCESS ||
+                vkCreateFence(_device.GetDevice(), &fence_info, nullptr, &_in_flight_fences[i]) != VK_SUCCESS) {
+                Utils::Fatal("Failed to create synchronisation primitives for frame " + std::to_string(i));
             }
         }
     }

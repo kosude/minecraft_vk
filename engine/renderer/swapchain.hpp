@@ -16,13 +16,20 @@
 namespace mcvk::Renderer {
     class Swapchain {
     public:
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
         Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent);
         Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::shared_ptr<Swapchain> old);
         ~Swapchain();
 
-        inline VkRenderPass GetRenderPass() const { return _render_pass; }
+        inline const VkRenderPass &GetRenderPass() const { return _render_pass; }
+        inline const VkFramebuffer &GetFramebuffer(uint32_t index) const { return _swapchain_framebuffers[index]; }
+        inline const VkExtent2D &GetExtent() const { return _swapchain_extent; }
 
         bool CompareSwapFormats(const Swapchain &swapchain) const;
+
+        VkResult AcquireNextImage(uint32_t *const image_index);
+        VkResult SubmitCommandBuffers(const std::vector<VkCommandBuffer> &cmdbufs, uint32_t *const image_index);
 
     private:
         void _Init();
@@ -32,6 +39,7 @@ namespace mcvk::Renderer {
         void _CreateDepthImages();
         void _CreateRenderPass();
         void _CreateFramebuffers();
+        void _CreateSynchronisationPrims();
 
         VkSurfaceFormatKHR _ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &candidates);
         VkPresentModeKHR _ChoosePresentMode(const std::vector<VkPresentModeKHR> &candidates);
@@ -54,5 +62,11 @@ namespace mcvk::Renderer {
 
         VkSwapchainKHR _swapchain;
         std::shared_ptr<Swapchain> _old_swapchain;
+
+        std::vector<VkSemaphore> _image_available_sems;
+        std::vector<VkSemaphore> _draw_complete_sems;
+        std::vector<VkFence> _in_flight_fences;
+        std::vector<VkFence> _images_in_flight;
+        size_t _current_frame;
     };
 }
