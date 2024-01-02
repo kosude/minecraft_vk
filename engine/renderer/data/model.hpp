@@ -34,5 +34,9 @@ namespace mcvk::Renderer {
                     (uv == other.uv);
             }
         };
+
+        std::vector<Vertex> vertices;
+        inline size_t GetVertexDataSize() const { return vertices.size() * sizeof(Vertex); }
+        inline void *GetVertexDataPtr() const { return (void *) vertices.data(); }
     };
 }

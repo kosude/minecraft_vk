@@ -7,12 +7,14 @@
 
 #pragma once
 
+#include "renderer/buffer/buffer.hpp"
 #include "renderer/pipeline/pipeline_factory.hpp"
 #include "renderer/device.hpp"
 #include "renderer/swapchain.hpp"
 
 #include <volk/volk.h>
 
+#include <utility>
 #include <vector>
 
 namespace mcvk::Renderer {
@@ -26,12 +28,16 @@ namespace mcvk::Renderer {
         CommandBuffer(const CommandBuffer &) = delete;
         CommandBuffer &operator=(const CommandBuffer &) = delete;
 
+        static VkCommandBuffer BeginOneTimeSubmit(const Device &device, VkCommandPool command_pool);
+        static void EndOneTimeSubmit(const Device &device, VkCommandPool command_pool, VkQueue queue, VkCommandBuffer cmdbuf);
+
         void End();
 
         void BeginRenderPass();
         void EndRenderPass();
 
         void BindPipeline(const GraphicsPipeline &pipeline);
+        void BindVertexBuffer(const Buffer &buffer);
 
         void UpdateViewportAndScissor();
 

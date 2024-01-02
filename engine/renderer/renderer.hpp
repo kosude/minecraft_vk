@@ -29,6 +29,7 @@ namespace mcvk::Renderer {
         Renderer(const Renderer &) = delete;
         Renderer &operator=(const Renderer &) = delete;
 
+        inline const Device &GetDevice() const { return _device; }
         inline const GraphicsPipeline &GetDefaultGraphicsPipeline() const { return *_default_pipeline; }
 
         void WaitDeviceIdle();

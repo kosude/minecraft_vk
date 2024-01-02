@@ -21,6 +21,44 @@ namespace mcvk::Renderer {
         vkFreeCommandBuffers(_device.GetDevice(), _device.GetGraphicsCommandPool(), static_cast<uint32_t>(_cmdbufs.size()), _cmdbufs.data());
     }
 
+    VkCommandBuffer CommandBuffer::BeginOneTimeSubmit(const Device &device, VkCommandPool command_pool) {
+        VkCommandBufferAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        alloc_info.commandPool = command_pool;
+        alloc_info.commandBufferCount = 1;
+
+        VkCommandBuffer cb;
+        if (vkAllocateCommandBuffers(device.GetDevice(), &alloc_info, &cb) != VK_SUCCESS) {
+            Utils::Fatal("Failed to allocate memory transfer command buffer");
+        }
+
+        VkCommandBufferBeginInfo begin_info{};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(cb, &begin_info) != VK_SUCCESS) {
+            Utils::Fatal("Failed to begin recording to one-time-submit command buffer");
+        }
+        return cb;
+    }
+
+    void CommandBuffer::EndOneTimeSubmit(const Device &device, VkCommandPool command_pool, VkQueue queue, VkCommandBuffer cmdbuf) {
+        if (vkEndCommandBuffer(cmdbuf) != VK_SUCCESS) {
+            Utils::Fatal("Failed to record one-time-submit command buffer");
+        }
+
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &cmdbuf;
+
+        vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(queue);
+
+        vkFreeCommandBuffers(device.GetDevice(), command_pool, 1, &cmdbuf);
+    }
+
     void CommandBuffer::End() {
         if (!_frame_started) {
             Utils::Error("Attempted to end command buffer when no frame is in progress");
@@ -66,6 +104,11 @@ namespace mcvk::Renderer {
 
     void CommandBuffer::BindPipeline(const GraphicsPipeline &pipeline) {
         vkCmdBindPipeline(_cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.GetPipeline());
+    }
+
+    void CommandBuffer::BindVertexBuffer(const Buffer &buffer) {
+        VkDeviceSize offset = 0;
+        vkCmdBindVertexBuffers(_cb, 0, 1, &buffer.GetBuffer(), &offset);
     }
 
     void CommandBuffer::UpdateViewportAndScissor() {

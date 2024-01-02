@@ -67,7 +67,7 @@ namespace mcvk::Renderer {
 
     void Image::_AllocImage() {
         if (vkCreateImage(_device.GetDevice(), &_config.image_info, nullptr, &_image) != VK_SUCCESS) {
-            Utils::Fatal("Failed to create image");
+            Utils::Fatal("Failed to create image object");
         }
         _config.view_info.image = _image;
 
@@ -78,7 +78,6 @@ namespace mcvk::Renderer {
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         alloc_info.allocationSize = requirements.size;
         alloc_info.memoryTypeIndex = _device.FindMemoryType(requirements.memoryTypeBits, _config.mem_props);
-
         if (vkAllocateMemory(_device.GetDevice(), &alloc_info, nullptr, &_memory) != VK_SUCCESS) {
             Utils::Fatal("Failed to allocate device memory for image");
         }

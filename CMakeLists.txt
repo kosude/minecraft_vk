@@ -18,6 +18,7 @@ set(C_CPP_SOURCES
     "game/game.cpp"
     "game/main.cpp"
 
+    "engine/renderer/buffer/buffer.cpp"
     "engine/renderer/buffer/image.cpp"
     "engine/renderer/data/model.cpp"
     "engine/renderer/pipeline/graphics_pipeline.cpp"

@@ -93,10 +93,13 @@ namespace mcvk::Renderer {
 
     void Device::_CreateLogicalDevice() {
         std::vector<VkDeviceQueueCreateInfo> queue_infos;
-        std::set<uint32_t> unique_indices = { _queue_families.graphics.value(), _queue_families.present.value() };
+        std::set<uint32_t> families = {
+            _queue_families.graphics.value(),
+            _queue_families.present.value(),
+            _queue_families.transfer.value() };
 
         float queue_priority = 1.0f;
-        for (uint32_t fam : unique_indices) {
+        for (uint32_t fam : families) {
             VkDeviceQueueCreateInfo queueCreateInfo = {};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = fam;
@@ -130,6 +133,7 @@ namespace mcvk::Renderer {
         // get queue handles
         vkGetDeviceQueue(_device, _queue_families.graphics.value(), 0, &_graphics_queue);
         vkGetDeviceQueue(_device, _queue_families.present.value(), 0, &_present_queue);
+        vkGetDeviceQueue(_device, _queue_families.transfer.value(), 0, &_transfer_queue);
     }
 
     void Device::_CreateCommandPools() {

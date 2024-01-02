@@ -44,6 +44,7 @@ namespace mcvk::Renderer {
         inline const VkCommandPool &GetTransferCommandPool() const { return _transfer_command_pool; }
         inline const VkQueue &GetGraphicsQueue() const { return _graphics_queue; }
         inline const VkQueue &GetPresentQueue() const { return _present_queue; }
+        inline const VkQueue &GetTransferQueue() const { return _transfer_queue; }
         inline SwapChainSupportDetails SwapchainSupportDetails() const { return _QuerySwapChainSupport(_physical_device); }
         inline QueueFamilyIndices FindQueueFamilyIndices() const { return _FindQueueFamilies(_physical_device); }
 
@@ -71,6 +72,7 @@ namespace mcvk::Renderer {
         VkDevice _device;
         VkQueue _graphics_queue;
         VkQueue _present_queue;
+        VkQueue _transfer_queue;
 
         QueueFamilyIndices _queue_families;
 

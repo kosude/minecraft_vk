@@ -6,7 +6,7 @@
  */
 
 #include "game/game.hpp"
-#include "utils/log.hpp"
+#include "engine/utils/log.hpp"
 
 #include <stdexcept>
 
