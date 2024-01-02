@@ -8,6 +8,7 @@
 #pragma once
 
 #include "renderer/pipeline/graphics_pipeline.hpp"
+#include "renderer/pipeline/pipeline_set.hpp"
 #include "renderer/command_buffer.hpp"
 #include "renderer/device.hpp"
 #include "renderer/instance_manager.hpp"
@@ -30,7 +31,7 @@ namespace mcvk::Renderer {
         Renderer &operator=(const Renderer &) = delete;
 
         inline const Device &GetDevice() const { return _device; }
-        inline const GraphicsPipeline &GetDefaultGraphicsPipeline() const { return *_default_pipeline; }
+        inline const PipelineSet &Pipelines() const { return _pipeline_set; }
 
         void WaitDeviceIdle();
 
@@ -43,17 +44,14 @@ namespace mcvk::Renderer {
         void _CreatePipelines();
         void _CreateCommandBuffers();
 
-        std::vector<ShaderInfo> _GetShaders();
-
         const Window &_window;
         const VkSurfaceKHR &_surface;
 
         InstanceManager _instance_mgr;
         Device _device;
+        PipelineSet _pipeline_set;
 
         std::unique_ptr<Swapchain> _swapchain;
         CommandBuffer _draw_command_buffer;
-
-        std::unique_ptr<GraphicsPipeline> _default_pipeline;
     };
 }

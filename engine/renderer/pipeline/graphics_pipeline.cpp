@@ -92,20 +92,32 @@ namespace mcvk::Renderer {
     }
 
     GraphicsPipeline::GraphicsPipeline(const Device &device, const std::vector<ShaderInfo> &shaders, const Config &config)
-        : _device{device}, _shader_set{device.GetDevice(), shaders}, _config{config} {
+        : _config{config}, Pipeline{device, shaders}{
         Utils::Info("Configuring graphics pipeline with " + std::to_string(shaders.size()) + " shaders...");
 
         _BuildLayout();
         _BuildCreateInfo();
     }
 
-    GraphicsPipeline::~GraphicsPipeline() {
-        vkDestroyPipelineLayout(_device.GetDevice(), _layout, nullptr);
-        vkDestroyPipeline(_device.GetDevice(), _pipeline, nullptr);
-    }
+    void GraphicsPipeline::BuildGraphicsPipelines(const Device &device, const std::vector<GraphicsPipeline *> &pipelines) {
+        Utils::Info("Building " + std::to_string(pipelines.size()) + " graphics pipelines");
 
-    void GraphicsPipeline::CmdBind(VkCommandBuffer cmdbuf) {
-        vkCmdBindPipeline(cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
+        std::vector<VkGraphicsPipelineCreateInfo> pipeline_infos(pipelines.size());
+        for (size_t i = 0; i < pipeline_infos.size(); i++) {
+            pipeline_infos[i] = pipelines[i]->_info;
+        }
+
+        std::vector<VkPipeline> vk_pipelines(pipelines.size());
+
+        if (vkCreateGraphicsPipelines(device.GetDevice(), VK_NULL_HANDLE, static_cast<uint32_t>(pipeline_infos.size()),
+            pipeline_infos.data(), nullptr, vk_pipelines.data()) != VK_SUCCESS) {
+            Utils::Fatal("Failed to create graphics pipeline");
+        }
+
+        // store new pipeline objects in each pipeline abstraction
+        for (size_t i = 0; i < vk_pipelines.size(); i++) {
+            pipelines[i]->_pipeline = vk_pipelines[i];
+        }
     }
 
     void GraphicsPipeline::_BuildLayout() {

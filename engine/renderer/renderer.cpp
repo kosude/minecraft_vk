@@ -7,7 +7,6 @@
 
 #include "renderer.hpp"
 
-#include "renderer/pipeline/pipeline_factory.hpp"
 #include "renderer/window.hpp"
 #include "utils/log.hpp"
 
@@ -17,6 +16,7 @@ namespace mcvk::Renderer {
         _instance_mgr{window},
         _surface{_instance_mgr.GetSurface()},
         _device{window, _instance_mgr.GetInstance(), _surface},
+        _pipeline_set{_device, _swapchain},
         _draw_command_buffer{_device, _swapchain} {
         _RecreateSwapchain();
         _CreatePipelines();
@@ -33,18 +33,6 @@ namespace mcvk::Renderer {
     CommandBuffer *Renderer::BeginDrawCommandBuffer() {
         _draw_command_buffer._Begin();
         return &_draw_command_buffer;
-    }
-
-    void Renderer::_CreatePipelines() {
-        std::vector<ShaderInfo> shaders = _GetShaders();
-
-        auto config = GraphicsPipeline::Config::Defaults();
-        config.render_pass = _swapchain->GetRenderPass();
-        config.rasterization_info.cullMode = VK_CULL_MODE_NONE;
-
-        _default_pipeline = std::make_unique<GraphicsPipeline>(_device, shaders, config);
-
-        PipelineFactory::BuildPipelines(_device, { _default_pipeline.get() });
     }
 
     void Renderer::_RecreateSwapchain() {
@@ -69,14 +57,11 @@ namespace mcvk::Renderer {
         }
     }
 
-    void Renderer::_CreateCommandBuffers() {
-        _draw_command_buffer._Initialise(this);
+    void Renderer::_CreatePipelines() {
+        _pipeline_set._Initialise();
     }
 
-    std::vector<ShaderInfo> Renderer::_GetShaders() {
-        return std::vector<ShaderInfo>{
-            { ShaderStage::Vertex,      "build/spv/simple_vert.glsl.spv" },
-            { ShaderStage::Fragment,    "build/spv/simple_frag.glsl.spv" }
-        };
+    void Renderer::_CreateCommandBuffers() {
+        _draw_command_buffer._Initialise(this);
     }
 }

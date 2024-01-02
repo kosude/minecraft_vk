@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include "renderer/pipeline/pipeline.hpp"
+
 #include "renderer/device.hpp"
 #include "renderer/shader_set.hpp"
 
 namespace mcvk::Renderer {
-    class GraphicsPipeline {
+    class GraphicsPipeline : public Pipeline<VkGraphicsPipelineCreateInfo> {
     public:
         struct Config {
             VkPipelineViewportStateCreateInfo viewport_info;
@@ -37,31 +39,14 @@ namespace mcvk::Renderer {
         };
 
         GraphicsPipeline(const Device &device, const std::vector<ShaderInfo> &shaders, const Config &config);
-        ~GraphicsPipeline();
 
-        GraphicsPipeline(const GraphicsPipeline &) = delete;
-        GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
-
-        inline const VkGraphicsPipelineCreateInfo &GetCreateInfo() const { return _info; }
-        inline const VkPipeline &GetPipeline() const { return _pipeline; }
-
-        void CmdBind(VkCommandBuffer cmdbuf);
+        static void BuildGraphicsPipelines(const Device &device, const std::vector<GraphicsPipeline *> &pipelines);
 
     private:
-        friend class PipelineFactory;
-
-        void _BuildLayout();
-        void _BuildCreateInfo();
-
-        const Device &_device;
-
-        ShaderSet _shader_set;
-        VkPipelineLayout _layout;
-        VkPipeline _pipeline;
+        void _BuildLayout() override;
+        void _BuildCreateInfo() override;
 
         Config _config;
-
-        VkGraphicsPipelineCreateInfo _info{};
 
         std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;
 

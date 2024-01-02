@@ -9,7 +9,7 @@
 
 #include "renderer/buffer/index_buffer.hpp"
 #include "renderer/buffer/vertex_buffer.hpp"
-#include "renderer/pipeline/pipeline_factory.hpp"
+#include "renderer/pipeline/graphics_pipeline.hpp"
 #include "renderer/device.hpp"
 #include "renderer/swapchain.hpp"
 
@@ -34,7 +34,7 @@ namespace mcvk::Renderer {
 
         void End();
 
-        void BeginRenderPass();
+        void BeginRenderPass(VkClearColorValue clear_col = {0});
         void EndRenderPass();
 
         void BindPipeline(const GraphicsPipeline &pipeline);

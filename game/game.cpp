@@ -21,26 +21,43 @@ namespace mcvk::Game {
     }
 
     void Game::Run() {
-        Renderer::Model triangle;
-        triangle.vertices = {
-            { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { -0.5f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+        Renderer::Model model;
+        model.vertices = {
+            { { -0.6f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.6f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.1f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.1f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+
+            { {  0.1f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.1f,  0.5f, 0.5f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.6f,  0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.6f, -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
         };
-        triangle.indices = {
-            0, 1, 2, 0, 3, 2
+        model.indices = {
+            0, 1, 2, 0, 3, 2,
+            4, 5, 6, 4, 7, 6,
         };
 
-        Renderer::VertexBuffer vbo{_renderer.GetDevice(), triangle.GetVertexDataSize()};
+        uint16_t arr1[] = {
+            0, 1, 2, 0, 3, 2,
+        };
+        uint16_t arr2[] = {
+            4, 5, 6, 4, 7, 6,
+        };
+
+        Renderer::VertexBuffer vbo{_renderer.GetDevice(), model.GetVertexDataSize()};
         vbo.Map();
-        vbo.Write(triangle.GetVertexDataPtr());
+        vbo.Write(model.GetVertexDataPtr());
         vbo.Unmap();
 
-        Renderer::IndexBuffer ibo{_renderer.GetDevice(), triangle.GetIndexDataSize(), Renderer::Model::GetIndexType()};
-        ibo.Map();
-        ibo.Write(triangle.GetIndexDataPtr());
-        ibo.Unmap();
+        Renderer::IndexBuffer ibo1{_renderer.GetDevice(), sizeof(arr1), Renderer::Model::GetIndexType()};
+        ibo1.Map();
+        ibo1.Write(arr1);
+        ibo1.Unmap();
+        Renderer::IndexBuffer ibo2{_renderer.GetDevice(), sizeof(arr2), Renderer::Model::GetIndexType()};
+        ibo2.Map();
+        ibo2.Write(arr2);
+        ibo2.Unmap();
 
         Utils::Info("Entering main loop...");
         while (true) {
@@ -49,15 +66,18 @@ namespace mcvk::Game {
             }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
-                drawbuf->BeginRenderPass();
+                drawbuf->BeginRenderPass({ 0.03, 0.03, 0.03 }); // clear to a dark grey
 
                 drawbuf->UpdateViewportAndScissor();
 
-                drawbuf->BindPipeline(_renderer.GetDefaultGraphicsPipeline());
+                // drawbuf->BindPipeline(_renderer.Pipelines().SimpleGraphics());
+                drawbuf->BindPipeline(_renderer.Pipelines().SimpleWireframeGraphics());
                 drawbuf->BindVertexBuffer(vbo);
-                drawbuf->BindIndexBuffer(ibo);
 
-                drawbuf->DrawIndexed(triangle.indices.size());
+                drawbuf->BindIndexBuffer(ibo1);
+                drawbuf->DrawIndexed(6);
+                drawbuf->BindIndexBuffer(ibo2);
+                drawbuf->DrawIndexed(6);
 
                 drawbuf->EndRenderPass();
                 drawbuf->End();

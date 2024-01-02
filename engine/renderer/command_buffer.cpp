@@ -80,7 +80,7 @@ namespace mcvk::Renderer {
         _current_frame_index = (_current_frame_index + 1) % Swapchain::MAX_FRAMES_IN_FLIGHT;
     }
 
-    void CommandBuffer::BeginRenderPass() {
+    void CommandBuffer::BeginRenderPass(VkClearColorValue clear_col) {
         VkRenderPassBeginInfo info{};
         info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         info.renderPass = _swapchain->GetRenderPass();
@@ -90,7 +90,7 @@ namespace mcvk::Renderer {
         info.renderArea.offset = { 0, 0 };
 
         std::array<VkClearValue, 2> clear{};
-        clear[0].color = { 0.3, 0.5, 0.8 };
+        clear[0].color = clear_col;
         clear[1].depthStencil = { 1, 0 };
         info.clearValueCount = static_cast<uint32_t>(clear.size());
         info.pClearValues = clear.data();

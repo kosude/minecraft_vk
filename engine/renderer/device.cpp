@@ -302,6 +302,8 @@ namespace mcvk::Renderer {
     VkPhysicalDeviceFeatures Device::_GetRequiredDeviceFeatures() const {
         VkPhysicalDeviceFeatures features{};
 
+        features.fillModeNonSolid = true;
+
         return features;
     }
 }
