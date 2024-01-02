@@ -10,4 +10,6 @@ layout(location = 0) out vec3 o_VERTEX_COLOUR;
 
 void main() {
     gl_Position = vec4(i_POSITION, 1.0);
+
+    o_VERTEX_COLOUR = i_COLOUR;
 }

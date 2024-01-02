@@ -40,5 +40,8 @@ namespace mcvk::Renderer {
         VkDeviceMemory _stage_memory;
 
         VkDeviceSize _size;
+
+        std::vector<uint32_t> _queue_families{};
+        VkSharingMode _sharing_mode{VK_SHARING_MODE_EXCLUSIVE};
     };
 }

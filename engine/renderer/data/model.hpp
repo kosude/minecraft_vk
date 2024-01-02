@@ -38,5 +38,10 @@ namespace mcvk::Renderer {
         std::vector<Vertex> vertices;
         inline size_t GetVertexDataSize() const { return vertices.size() * sizeof(Vertex); }
         inline void *GetVertexDataPtr() const { return (void *) vertices.data(); }
+
+        std::vector<uint16_t> indices;
+        inline size_t GetIndexDataSize() const { return indices.size() * sizeof(uint16_t); }
+        inline void *GetIndexDataPtr() const { return (void *) indices.data(); }
+        inline static VkIndexType GetIndexType() { return VK_INDEX_TYPE_UINT16; }
     };
 }

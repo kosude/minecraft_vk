@@ -20,6 +20,8 @@ set(C_CPP_SOURCES
 
     "engine/renderer/buffer/buffer.cpp"
     "engine/renderer/buffer/image.cpp"
+    "engine/renderer/buffer/index_buffer.cpp"
+    "engine/renderer/buffer/vertex_buffer.cpp"
     "engine/renderer/data/model.cpp"
     "engine/renderer/pipeline/graphics_pipeline.cpp"
     "engine/renderer/pipeline/pipeline_factory.cpp"

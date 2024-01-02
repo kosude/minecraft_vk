@@ -40,6 +40,7 @@ namespace mcvk::Renderer {
 
         auto config = GraphicsPipeline::Config::Defaults();
         config.render_pass = _swapchain->GetRenderPass();
+        config.rasterization_info.cullMode = VK_CULL_MODE_NONE;
 
         _default_pipeline = std::make_unique<GraphicsPipeline>(_device, shaders, config);
 

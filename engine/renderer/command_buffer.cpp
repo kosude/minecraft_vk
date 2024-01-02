@@ -106,9 +106,21 @@ namespace mcvk::Renderer {
         vkCmdBindPipeline(_cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.GetPipeline());
     }
 
-    void CommandBuffer::BindVertexBuffer(const Buffer &buffer) {
+    void CommandBuffer::BindVertexBuffer(const VertexBuffer &buffer) {
         VkDeviceSize offset = 0;
         vkCmdBindVertexBuffers(_cb, 0, 1, &buffer.GetBuffer(), &offset);
+    }
+
+    void CommandBuffer::BindIndexBuffer(const IndexBuffer &buffer) {
+        vkCmdBindIndexBuffer(_cb, buffer.GetBuffer(), 0, buffer.GetIndexType());
+    }
+
+    void CommandBuffer::Draw(uint32_t vertex_count) {
+        vkCmdDraw(_cb, vertex_count, 1, 0, 0);
+    }
+
+    void CommandBuffer::DrawIndexed(uint32_t index_count){
+        vkCmdDrawIndexed(_cb, index_count, 1, 0, 0, 0);
     }
 
     void CommandBuffer::UpdateViewportAndScissor() {

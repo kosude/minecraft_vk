@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "renderer/buffer/buffer.hpp"
+#include "renderer/buffer/index_buffer.hpp"
+#include "renderer/buffer/vertex_buffer.hpp"
 #include "renderer/pipeline/pipeline_factory.hpp"
 #include "renderer/device.hpp"
 #include "renderer/swapchain.hpp"
@@ -37,7 +38,11 @@ namespace mcvk::Renderer {
         void EndRenderPass();
 
         void BindPipeline(const GraphicsPipeline &pipeline);
-        void BindVertexBuffer(const Buffer &buffer);
+        void BindVertexBuffer(const VertexBuffer &buffer);
+        void BindIndexBuffer(const IndexBuffer &buffer);
+
+        void Draw(uint32_t vertex_count);
+        void DrawIndexed(uint32_t index_count);
 
         void UpdateViewportAndScissor();
 

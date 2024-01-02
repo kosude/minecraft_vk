@@ -18,6 +18,15 @@
 namespace mcvk::Renderer {
     Buffer::Buffer(const Device &device, VkDeviceSize size, VkBufferUsageFlags usage)
         : _device{device}, _size{size} {
+        // if graphics and transfer queues are in different families, then concurrently share data between those families
+        QueueFamilyIndices families = _device.FindQueueFamilyIndices();
+        if (families.graphics != families.transfer) {
+            _sharing_mode == VK_SHARING_MODE_CONCURRENT;
+            _queue_families = {
+                families.graphics.value(),
+                families.transfer.value() };
+        }
+
         _CreateBuffer(&_stage, &_stage_memory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         _CreateBuffer(&_buffer, &_memory, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
@@ -93,7 +102,11 @@ namespace mcvk::Renderer {
         create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         create_info.size = _size;
         create_info.usage = usage;
-        create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        create_info.sharingMode = _sharing_mode;
+        if (create_info.sharingMode == VK_SHARING_MODE_CONCURRENT) {
+            create_info.queueFamilyIndexCount = static_cast<uint32_t>(_queue_families.size());
+            create_info.pQueueFamilyIndices = _queue_families.data();
+        }
         if (vkCreateBuffer(_device.GetDevice(), &create_info, nullptr, buf) != VK_SUCCESS) {
             Utils::Fatal("Failed to create buffer object");
         }

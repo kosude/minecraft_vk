@@ -7,7 +7,7 @@
 
 #include "game.hpp"
 
-#include "engine/renderer/buffer/buffer.hpp"
+#include "engine/renderer/buffer/vertex_buffer.hpp"
 #include "engine/renderer/data/model.hpp"
 
 #include "utils/log.hpp"
@@ -23,15 +23,24 @@ namespace mcvk::Game {
     void Game::Run() {
         Renderer::Model triangle;
         triangle.vertices = {
-            { { -0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }
+            { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.5f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+        };
+        triangle.indices = {
+            0, 1, 2, 0, 3, 2
         };
 
-        Renderer::Buffer vbo{_renderer.GetDevice(), triangle.GetVertexDataSize(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
+        Renderer::VertexBuffer vbo{_renderer.GetDevice(), triangle.GetVertexDataSize()};
         vbo.Map();
         vbo.Write(triangle.GetVertexDataPtr());
         vbo.Unmap();
+
+        Renderer::IndexBuffer ibo{_renderer.GetDevice(), triangle.GetIndexDataSize(), Renderer::Model::GetIndexType()};
+        ibo.Map();
+        ibo.Write(triangle.GetIndexDataPtr());
+        ibo.Unmap();
 
         Utils::Info("Entering main loop...");
         while (true) {
@@ -46,6 +55,9 @@ namespace mcvk::Game {
 
                 drawbuf->BindPipeline(_renderer.GetDefaultGraphicsPipeline());
                 drawbuf->BindVertexBuffer(vbo);
+                drawbuf->BindIndexBuffer(ibo);
+
+                drawbuf->DrawIndexed(triangle.indices.size());
 
                 drawbuf->EndRenderPass();
                 drawbuf->End();
