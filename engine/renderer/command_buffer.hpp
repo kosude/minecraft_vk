@@ -7,9 +7,8 @@
 
 #pragma once
 
-#include "renderer/buffer/index_buffer.hpp"
-#include "renderer/buffer/vertex_buffer.hpp"
 #include "renderer/pipeline/graphics_pipeline.hpp"
+#include "renderer/resource/buffer.hpp"
 #include "renderer/device.hpp"
 #include "renderer/swapchain.hpp"
 

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "renderer/buffer/image.hpp"
+#include "renderer/resource/image.hpp"
 #include "renderer/device.hpp"
 
 #include <memory>

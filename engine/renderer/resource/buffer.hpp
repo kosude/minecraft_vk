@@ -10,6 +10,9 @@
 #include "renderer/device.hpp"
 
 namespace mcvk::Renderer {
+    class Renderer;
+
+
     class Buffer {
     public:
         Buffer(const Device &device, VkDeviceSize size);
@@ -46,5 +49,47 @@ namespace mcvk::Renderer {
 
         std::vector<uint32_t> _queue_families{};
         VkSharingMode _sharing_mode{VK_SHARING_MODE_EXCLUSIVE};
+    };
+
+
+    class VertexBuffer : public Buffer {
+    public:
+        VertexBuffer(const Device &device, VkDeviceSize size);
+    };
+
+
+    class IndexBuffer : public Buffer {
+    public:
+        IndexBuffer(const Device &device, VkDeviceSize size, VkIndexType index_type);
+
+        inline const VkIndexType &GetIndexType() const { return _index_type; }
+
+    private:
+        VkIndexType _index_type;
+    };
+
+
+    class UniformBuffer : private Buffer {
+    public:
+        UniformBuffer(const Renderer &renderer, VkDeviceSize size);
+        ~UniformBuffer() override;
+
+        const VkBuffer &GetBuffer() const;
+        using Buffer::GetSize;
+
+        void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
+    private:
+        struct BufferHandle {
+            VkBuffer buf;
+            VkDeviceMemory mem;
+            void *mapped;
+        };
+
+        const Renderer &_renderer;
+
+        std::vector<BufferHandle> _buffer_handles;
+
+        void _Map(uint32_t index, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     };
 }

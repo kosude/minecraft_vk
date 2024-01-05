@@ -7,11 +7,9 @@
 
 #include "game.hpp"
 
-#include "engine/renderer/buffer/vertex_buffer.hpp"
-#include "engine/renderer/buffer/index_buffer.hpp"
-#include "engine/renderer/buffer/uniform_buffer.hpp"
+#include "engine/renderer/resource/buffer.hpp"
+#include "engine/renderer/resource/descriptor.hpp"
 #include "engine/renderer/data/model.hpp"
-#include "engine/renderer/descriptors.hpp"
 
 #include "utils/log.hpp"
 

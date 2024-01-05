@@ -5,10 +5,10 @@
  *   See the LICENCE file for more information.
  */
 
-#include "descriptors.hpp"
+#include "descriptor.hpp"
 
-#include "renderer/buffer/uniform_buffer.hpp"
-#include "renderer/buffer/image.hpp"
+#include "renderer/resource/buffer.hpp"
+#include "renderer/resource/image.hpp"
 #include "utils/log.hpp"
 
 namespace mcvk::Renderer {
@@ -102,6 +102,7 @@ namespace mcvk::Renderer {
         return pool;
     }
 
+
     DescriptorSetLayoutBuilder &DescriptorSetLayoutBuilder::AddBinding(int32_t binding, VkDescriptorType type, uint32_t descrcount,
         VkShaderStageFlags stages, VkSampler *immutsamplers) {
         VkDescriptorSetLayoutBinding info{};
@@ -128,6 +129,7 @@ namespace mcvk::Renderer {
         }
         return layout;
     }
+
 
     DescriptorWriter &DescriptorWriter::AddWriteBuffer(int32_t binding, VkDescriptorType type, const UniformBuffer &buffer, VkDeviceSize offset,
         VkDeviceSize range) {

@@ -44,6 +44,7 @@ namespace mcvk::Renderer {
         uint32_t _sets_per_pool;
     };
 
+
     class DescriptorSetLayoutBuilder {
     public:
         inline static DescriptorSetLayoutBuilder New() { return DescriptorSetLayoutBuilder{}; }
@@ -56,6 +57,7 @@ namespace mcvk::Renderer {
     private:
         std::vector<VkDescriptorSetLayoutBinding> _bindings;
     };
+
 
     class DescriptorWriter {
     public:
