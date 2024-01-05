@@ -8,8 +8,12 @@ layout(location = 3) in vec2 i_UV;
 
 layout(location = 0) out vec3 o_VERTEX_COLOUR;
 
+layout(set = 0, binding = 0) uniform GlobalUbo_t {
+    vec2 offset;
+} u_GLOBAL;
+
 void main() {
-    gl_Position = vec4(i_POSITION, 1.0);
+    gl_Position = vec4(i_POSITION.xy + u_GLOBAL.offset, i_POSITION.z, 1.0);
 
     o_VERTEX_COLOUR = i_COLOUR;
 }

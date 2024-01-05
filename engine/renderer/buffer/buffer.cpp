@@ -16,6 +16,10 @@
 #include <bits/timex.h>
 
 namespace mcvk::Renderer {
+    Buffer::Buffer(const Device &device, VkDeviceSize size)
+        : _device{device}, _size{size} {
+    }
+
     Buffer::Buffer(const Device &device, VkDeviceSize size, VkBufferUsageFlags usage)
         : _device{device}, _size{size} {
         // if graphics and transfer queues are in different families, then concurrently share data between those families
@@ -26,18 +30,21 @@ namespace mcvk::Renderer {
                 families.graphics.value(),
                 families.transfer.value() };
         }
-
         _CreateBuffer(&_stage, &_stage_memory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
         _CreateBuffer(&_buffer, &_memory, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
 
     Buffer::~Buffer() {
-        Unmap();
-        vkDestroyBuffer(_device.GetDevice(), _stage, nullptr);
-        vkFreeMemory(_device.GetDevice(), _stage_memory, nullptr);
+        if (_stage != VK_NULL_HANDLE) {
+            vkDestroyBuffer(_device.GetDevice(), _stage, nullptr);
+            vkFreeMemory(_device.GetDevice(), _stage_memory, nullptr);
+        }
 
-        vkDestroyBuffer(_device.GetDevice(), _buffer, nullptr);
-        vkFreeMemory(_device.GetDevice(), _memory, nullptr);
+        if (_buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(_device.GetDevice(), _buffer, nullptr);
+            vkFreeMemory(_device.GetDevice(), _memory, nullptr);
+        }
     }
 
     void Buffer::Write(void *data, VkDeviceSize size, VkDeviceSize offset) {

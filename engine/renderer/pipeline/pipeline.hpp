@@ -24,6 +24,7 @@ namespace mcvk::Renderer {
         Pipeline &operator=(const Pipeline &) = delete;
 
         inline const VkPipeline &GetPipeline() const { return _pipeline; }
+        inline const VkPipelineLayout &GetPipelineLayout() const { return _layout; }
         inline const CreateInfoT &GetCreateInfo() const { return _info; }
 
     protected:

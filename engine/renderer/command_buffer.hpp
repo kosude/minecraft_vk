@@ -40,6 +40,7 @@ namespace mcvk::Renderer {
         void BindPipeline(const GraphicsPipeline &pipeline);
         void BindVertexBuffer(const VertexBuffer &buffer);
         void BindIndexBuffer(const IndexBuffer &buffer);
+        void BindDescriptorSets(const GraphicsPipeline &pipeline, const std::vector<VkDescriptorSet> &sets);
 
         void Draw(uint32_t vertex_count);
         void DrawIndexed(uint32_t index_count);

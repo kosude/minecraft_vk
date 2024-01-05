@@ -115,6 +115,20 @@ namespace mcvk::Renderer {
         vkCmdBindIndexBuffer(_cb, buffer.GetBuffer(), 0, buffer.GetIndexType());
     }
 
+    void CommandBuffer::BindDescriptorSets(const GraphicsPipeline &pipeline, const std::vector<VkDescriptorSet> &sets) {
+        VkPipelineLayout layout = pipeline.GetPipelineLayout();
+
+        vkCmdBindDescriptorSets(
+            _cb,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            layout,
+            0,
+            static_cast<uint32_t>(sets.size()),
+            sets.data(),
+            0,
+            nullptr);
+    }
+
     void CommandBuffer::Draw(uint32_t vertex_count) {
         vkCmdDraw(_cb, vertex_count, 1, 0, 0);
     }

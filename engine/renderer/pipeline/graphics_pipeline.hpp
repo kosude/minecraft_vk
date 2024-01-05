@@ -33,6 +33,7 @@ namespace mcvk::Renderer {
             VkRenderPass render_pass = nullptr;
             uint32_t subpass = 0;
 
+            std::vector<VkDescriptorSetLayout> set_layouts;
             std::vector<VkPushConstantRange> push_constant_ranges;
 
             static Config Defaults();

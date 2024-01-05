@@ -30,8 +30,11 @@ namespace mcvk::Renderer {
         Renderer(const Renderer &) = delete;
         Renderer &operator=(const Renderer &) = delete;
 
+        void BuildPipelines(const std::vector<VkDescriptorSetLayout> &set_layouts);
+
         inline const Device &GetDevice() const { return _device; }
         inline const PipelineSet &Pipelines() const { return _pipeline_set; }
+        inline const int32_t &GetCurrentFrame() const { return _draw_command_buffer._current_frame_index; }
 
         void WaitDeviceIdle();
 
@@ -41,7 +44,6 @@ namespace mcvk::Renderer {
         friend class CommandBuffer;
 
         void _RecreateSwapchain();
-        void _CreatePipelines();
         void _CreateCommandBuffers();
 
         const Window &_window;

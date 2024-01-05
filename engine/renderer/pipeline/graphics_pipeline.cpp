@@ -86,6 +86,7 @@ namespace mcvk::Renderer {
         config.dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(config.dynamic_states.size());
         config.dynamic_state_info.flags = 0;
 
+        config.set_layouts = {};
         config.push_constant_ranges = {};
 
         return config;
@@ -123,8 +124,8 @@ namespace mcvk::Renderer {
     void GraphicsPipeline::_BuildLayout() {
         VkPipelineLayoutCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        info.setLayoutCount = 0;
-        info.pSetLayouts = nullptr;
+        info.setLayoutCount = static_cast<uint32_t>(_config.set_layouts.size());
+        info.pSetLayouts = _config.set_layouts.data();
         info.pushConstantRangeCount = static_cast<uint32_t>(_config.push_constant_ranges.size());
         info.pPushConstantRanges = _config.push_constant_ranges.data();
 

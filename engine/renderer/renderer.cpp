@@ -19,11 +19,14 @@ namespace mcvk::Renderer {
         _pipeline_set{_device, _swapchain},
         _draw_command_buffer{_device, _swapchain} {
         _RecreateSwapchain();
-        _CreatePipelines();
         _CreateCommandBuffers();
     }
 
     Renderer::~Renderer() {
+    }
+
+    void Renderer::BuildPipelines(const std::vector<VkDescriptorSetLayout> &set_layouts) {
+        _pipeline_set._Initialise(set_layouts);
     }
 
     void Renderer::WaitDeviceIdle() {
@@ -55,10 +58,6 @@ namespace mcvk::Renderer {
                 Utils::Fatal("When recreating swap chain: image or depth buffer format has changed");
             }
         }
-    }
-
-    void Renderer::_CreatePipelines() {
-        _pipeline_set._Initialise();
     }
 
     void Renderer::_CreateCommandBuffers() {

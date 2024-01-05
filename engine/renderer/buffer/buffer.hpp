@@ -12,34 +12,37 @@
 namespace mcvk::Renderer {
     class Buffer {
     public:
+        Buffer(const Device &device, VkDeviceSize size);
         Buffer(const Device &device, VkDeviceSize size, VkBufferUsageFlags usage);
-        ~Buffer();
+        virtual ~Buffer();
 
-        const VkBuffer &GetBuffer() const { return _buffer; }
+        inline const VkBuffer &GetBuffer() const { return _buffer; }
+        inline const VkDeviceSize &GetSize() const { return _size; }
 
-        void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        virtual void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
-        void Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-        void Unmap();
+        virtual void Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        virtual void Unmap();
 
-        void Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-        void Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        virtual void Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        virtual void Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
+    protected:
+        virtual void _CreateBuffer(VkBuffer *buf, VkDeviceMemory *mem, VkBufferUsageFlags usage, VkMemoryPropertyFlags memprops);
+
+        const Device &_device;
+
+        VkDeviceSize _size;
 
     private:
-        void _CreateBuffer(VkBuffer *buf, VkDeviceMemory *mem, VkBufferUsageFlags usage, VkMemoryPropertyFlags memprops);
-
         void _TransferStaged(VkDeviceSize size, VkDeviceSize offset);
 
         void *_mapped{nullptr};
 
-        const Device &_device;
-
-        VkBuffer _buffer;
-        VkDeviceMemory _memory;
-        VkBuffer _stage;
-        VkDeviceMemory _stage_memory;
-
-        VkDeviceSize _size;
+        VkBuffer _buffer{VK_NULL_HANDLE};
+        VkDeviceMemory _memory{VK_NULL_HANDLE};
+        VkBuffer _stage{VK_NULL_HANDLE};
+        VkDeviceMemory _stage_memory{VK_NULL_HANDLE};
 
         std::vector<uint32_t> _queue_families{};
         VkSharingMode _sharing_mode{VK_SHARING_MODE_EXCLUSIVE};

@@ -24,8 +24,8 @@ namespace mcvk::Renderer {
     private:
         friend class Renderer;
 
-        void _Initialise();
-        void _CreateGraphicsPipelines();
+        void _Initialise(const std::vector<VkDescriptorSetLayout> &set_layouts);
+        void _CreateGraphicsPipelines(const std::vector<VkDescriptorSetLayout> &set_layouts);
 
         std::vector<ShaderInfo> _GetShaders();
 

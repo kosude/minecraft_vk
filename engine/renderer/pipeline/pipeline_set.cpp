@@ -14,14 +14,15 @@ namespace mcvk::Renderer {
         : _device{device}, _swapchain{swapchain} {
     }
 
-    void PipelineSet::_Initialise() {
-        _CreateGraphicsPipelines();
+    void PipelineSet::_Initialise(const std::vector<VkDescriptorSetLayout> &set_layouts) {
+        _CreateGraphicsPipelines(set_layouts);
     }
 
-    void PipelineSet::_CreateGraphicsPipelines() {
+    void PipelineSet::_CreateGraphicsPipelines(const std::vector<VkDescriptorSetLayout> &set_layouts) {
         auto shaders = _GetShaders();
         auto config = GraphicsPipeline::Config::Defaults();
         config.render_pass = _swapchain->GetRenderPass();
+        config.set_layouts = set_layouts;
 
         // _g_simple pipeline
         {
