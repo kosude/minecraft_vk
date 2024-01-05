@@ -28,6 +28,7 @@ set(C_CPP_SOURCES
     "engine/renderer/pipeline/pipeline_set.cpp"
     "engine/renderer/pipeline/pipeline.cpp"
     "engine/renderer/command_buffer.cpp"
+    "engine/renderer/descriptors.cpp"
     "engine/renderer/device.cpp"
     "engine/renderer/instance_manager.cpp"
     "engine/renderer/renderer.cpp"

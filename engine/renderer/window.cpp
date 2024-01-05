@@ -31,6 +31,11 @@ namespace mcvk::Renderer {
         return !glfwWindowShouldClose(_window);
     }
 
+    float Window::GetAspectRatio() const {
+        VkExtent2D extent = GetExtent();
+        return static_cast<float>(extent.width) / static_cast<float>(extent.height);
+    }
+
     std::vector<const char *> Window::GetGLFWRequiredExtensions() {
         uint32_t glfwExtensionCount = 0;
         const char **glfwExtensions;

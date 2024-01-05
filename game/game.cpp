@@ -11,12 +11,21 @@
 #include "engine/renderer/buffer/index_buffer.hpp"
 #include "engine/renderer/buffer/uniform_buffer.hpp"
 #include "engine/renderer/data/model.hpp"
+#include "engine/renderer/descriptors.hpp"
 
 #include "utils/log.hpp"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace mcvk::Game {
     struct GlobalUniformData {
-        glm::vec2 offset{0.0f, 0.0f};
+        glm::mat4 projection{1.0f};
+        glm::mat4 view{1.0f};
+    };
+    struct ModelUniformData {
+        glm::mat4 transform{1.0f};
     };
 
     Game::Game()
@@ -29,26 +38,13 @@ namespace mcvk::Game {
     void Game::Run() {
         Renderer::Model model;
         model.vertices = {
-            { { -0.6f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { -0.6f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { -0.1f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { -0.1f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-
-            { {  0.1f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.1f,  0.5f, 0.5f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.6f,  0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.6f, -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -0.5f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
         };
         model.indices = {
             0, 1, 2, 0, 3, 2,
-            4, 5, 6, 4, 7, 6,
-        };
-
-        uint16_t arr1[] = {
-            0, 1, 2, 0, 3, 2,
-        };
-        uint16_t arr2[] = {
-            4, 5, 6, 4, 7, 6,
         };
 
         Renderer::VertexBuffer vbo{_renderer.GetDevice(), model.GetVertexDataSize()};
@@ -56,71 +52,32 @@ namespace mcvk::Game {
         vbo.Write(model.GetVertexDataPtr());
         vbo.Unmap();
 
-        Renderer::IndexBuffer ibo1{_renderer.GetDevice(), sizeof(arr1), Renderer::Model::GetIndexType()};
-        ibo1.Map();
-        ibo1.Write(arr1);
-        ibo1.Unmap();
-        Renderer::IndexBuffer ibo2{_renderer.GetDevice(), sizeof(arr2), Renderer::Model::GetIndexType()};
-        ibo2.Map();
-        ibo2.Write(arr2);
-        ibo2.Unmap();
+        Renderer::IndexBuffer ibo{_renderer.GetDevice(), model.GetIndexDataSize(), Renderer::Model::GetIndexType()};
+        ibo.Map();
+        ibo.Write(model.GetIndexDataPtr());
+        ibo.Unmap();
 
-        Renderer::UniformBuffer ubo{_renderer, sizeof(GlobalUniformData)};
+        Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
+        Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 2}; // per-instance data; 2 instances
 
-        VkDescriptorPool dpool;
-        {
-            VkDescriptorPoolSize dpoolsizes[1];
-            dpoolsizes[0].descriptorCount = 1;
-            dpoolsizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        VkDescriptorSetLayout dset_layout = Renderer::DescriptorSetLayoutBuilder::New()
+            .AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT)
+            .AddBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT)
+            .Build(_renderer.GetDevice());
 
-            VkDescriptorPoolCreateInfo dpoolinfo{};
-            dpoolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            dpoolinfo.maxSets = 1;
-            dpoolinfo.poolSizeCount = 1;
-            dpoolinfo.pPoolSizes = dpoolsizes;
-            vkCreateDescriptorPool(_renderer.GetDevice().GetDevice(), &dpoolinfo, nullptr, &dpool);
-        }
-        std::vector<VkDescriptorSetLayout> dsetlayouts(1);
-        {
-            VkDescriptorSetLayoutBinding bindings[1];
-            bindings[0].binding = 0;
-            bindings[0].descriptorCount = 1;
-            bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            bindings[0].pImmutableSamplers = nullptr;
-            bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        _renderer.BuildPipelines({ dset_layout });
 
-            VkDescriptorSetLayoutCreateInfo dsetlayoutinfo{};
-            dsetlayoutinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            dsetlayoutinfo.bindingCount = 1;
-            dsetlayoutinfo.pBindings = bindings;
-            vkCreateDescriptorSetLayout(_renderer.GetDevice().GetDevice(), &dsetlayoutinfo, nullptr, &dsetlayouts[0]);
-        }
-        std::vector<VkDescriptorSet> dsets(1);
-        {
-            VkDescriptorSetAllocateInfo dsetallocinfo{};
-            dsetallocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            dsetallocinfo.descriptorPool = dpool;
-            dsetallocinfo.descriptorSetCount = 1;
-            dsetallocinfo.pSetLayouts = dsetlayouts.data();
-            vkAllocateDescriptorSets(_renderer.GetDevice().GetDevice(), &dsetallocinfo, dsets.data());
+        std::vector<Renderer::DescriptorAllocatorGrowable::PoolSizeRatio> descriptor_ratios{
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 }
+        };
+        Renderer::DescriptorAllocatorGrowable dalloc{_renderer.GetDevice(), 2, descriptor_ratios};
 
-            VkWriteDescriptorSet writes[1];
-            // write uniform buffer info to the descriptor set
-            VkDescriptorBufferInfo uboinfo{};
-                uboinfo.buffer = ubo.GetBuffer();
-                uboinfo.offset = 0;
-                uboinfo.range = ubo.GetSize();
-            writes[0] = {};
-            writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writes[0].dstSet = dsets[0];
-            writes[0].dstBinding = 0;
-            writes[0].descriptorCount = 1;
-            writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            writes[0].pBufferInfo = &uboinfo;
-            vkUpdateDescriptorSets(_renderer.GetDevice().GetDevice(), 1, writes, 0, nullptr);
-        }
-
-        _renderer.BuildPipelines(dsetlayouts);
+        VkDescriptorSet dset = dalloc.AllocateSet(dset_layout);
+        Renderer::DescriptorWriter::New()
+            .AddWriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, ubo_global)
+            .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0, sizeof(ModelUniformData))
+            .UpdateSet(_renderer.GetDevice(), dset);
 
         Utils::Info("Entering main loop...");
         while (true) {
@@ -130,10 +87,18 @@ namespace mcvk::Game {
 
             const Renderer::GraphicsPipeline &g_simple = _renderer.Pipelines().SimpleGraphics();
 
-            GlobalUniformData ubo_data{
-                { 0.2f, 0.2f }
-            };
-            ubo.Write(&ubo_data);
+            {
+                GlobalUniformData d;
+                d.projection = glm::perspective(glm::radians(70.0f), _window.GetAspectRatio(), 0.1f, 100.0f);
+                d.view = glm::lookAt(glm::vec3{0.0f, -2.0f, -1.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+                ubo_global.Write(&d);
+            }
+            {
+                ModelUniformData d[2];
+                d[0].transform = glm::mat4{1.0f};
+                d[1].transform = glm::rotate(glm::mat4{1.0f}, glm::radians(45.0f), glm::vec3(0, 0, 1));
+                ubo_model.Write(&d);
+            }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
                 drawbuf->BeginRenderPass({ 0.03, 0.03, 0.03 }); // clear to a dark grey
@@ -142,12 +107,12 @@ namespace mcvk::Game {
 
                 drawbuf->BindPipeline(g_simple);
                 drawbuf->BindVertexBuffer(vbo);
-                drawbuf->BindDescriptorSets(g_simple, dsets);
+                drawbuf->BindIndexBuffer(ibo);
 
-                drawbuf->BindIndexBuffer(ibo1);
-                drawbuf->DrawIndexed(6);
-                drawbuf->BindIndexBuffer(ibo2);
-                drawbuf->DrawIndexed(6);
+                drawbuf->BindDescriptorSets(g_simple, { dset }, { 0 });
+                drawbuf->DrawIndexed(model.indices.size());
+                drawbuf->BindDescriptorSets(g_simple, { dset }, { sizeof(ModelUniformData) });
+                drawbuf->DrawIndexed(model.indices.size());
 
                 drawbuf->EndRenderPass();
                 drawbuf->End();
@@ -159,8 +124,6 @@ namespace mcvk::Game {
 
         Utils::Info("Window closed");
 
-        vkResetDescriptorPool(_renderer.GetDevice().GetDevice(), dpool, 0);
-        vkDestroyDescriptorSetLayout(_renderer.GetDevice().GetDevice(), dsetlayouts[0], nullptr);
-        vkDestroyDescriptorPool(_renderer.GetDevice().GetDevice(), dpool, nullptr);
+        vkDestroyDescriptorSetLayout(_renderer.GetDevice().GetDevice(), dset_layout, nullptr);
     }
 }

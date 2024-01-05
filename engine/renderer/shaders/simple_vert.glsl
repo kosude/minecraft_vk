@@ -9,11 +9,16 @@ layout(location = 3) in vec2 i_UV;
 layout(location = 0) out vec3 o_VERTEX_COLOUR;
 
 layout(set = 0, binding = 0) uniform GlobalUbo_t {
-    vec2 offset;
+    mat4 projection;
+    mat4 view;
 } u_GLOBAL;
 
+layout(set = 0, binding = 1) uniform ModelUbo_t {
+    mat4 transform;
+} u_MODEL;
+
 void main() {
-    gl_Position = vec4(i_POSITION.xy + u_GLOBAL.offset, i_POSITION.z, 1.0);
+    gl_Position = u_GLOBAL.projection * u_GLOBAL.view * u_MODEL.transform * vec4(i_POSITION, 1.0);
 
     o_VERTEX_COLOUR = i_COLOUR;
 }
