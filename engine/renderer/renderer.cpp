@@ -11,12 +11,12 @@
 #include "utils/log.hpp"
 
 namespace mcvk::Renderer {
-    Renderer::Renderer(const Window &window)
+    Renderer::Renderer(const Window &window, const ResourceMgr::ResourceManager &resmgr)
         : _window{window},
         _instance_mgr{window},
         _surface{_instance_mgr.GetSurface()},
         _device{window, _instance_mgr.GetInstance(), _surface},
-        _pipeline_set{_device, _swapchain},
+        _pipeline_set{_device, _swapchain, resmgr},
         _draw_command_buffer{_device, _swapchain} {
         _RecreateSwapchain();
         _CreateCommandBuffers();
@@ -40,7 +40,8 @@ namespace mcvk::Renderer {
 
     void Renderer::_RecreateSwapchain() {
         VkExtent2D extent = _window.GetExtent();
-        while (extent.width <= 0 || extent.height <= 0) {
+        // block while window is minimised
+        while (extent.width == 0 || extent.height == 0) {
             extent = _window.GetExtent();
             glfwWaitEvents();
         }

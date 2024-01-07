@@ -22,6 +22,19 @@ namespace mcvk::Renderer {
         return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
     }
 
+    ShaderStage StringToShaderStage(const std::string &str) {
+        static const std::unordered_map<std::string, ShaderStage> strenum_map = {
+            { "vertex", ShaderStage::Vertex },
+            { "fragment", ShaderStage::Fragment },
+        };
+        auto it = strenum_map.find(str);
+        if (it != strenum_map.end()) {
+            return it->second;
+        } else {
+            return ShaderStage::Null;
+        }
+    }
+
     ShaderSet::ShaderSet(const VkDevice &device, const std::vector<ShaderInfo> &shaders)
         : _device{device}, _shader_modules{} {
         // create modules for each specified shader

@@ -10,8 +10,7 @@
 #include "engine/renderer/resource/buffer.hpp"
 #include "engine/renderer/resource/descriptor.hpp"
 #include "engine/renderer/data/model.hpp"
-
-#include "utils/log.hpp"
+#include "engine/utils/log.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -26,8 +25,8 @@ namespace mcvk::Game {
         glm::mat4 transform{1.0f};
     };
 
-    Game::Game()
-        : _window{720, 540, "Minecraft Vulkan"}, _renderer{_window} {
+    Game::Game(const std::filesystem::path &resourcedir)
+        : _resources{resourcedir}, _window{720, 540, "Minecraft Vulkan"}, _renderer{_window, _resources} {
     }
 
     Game::~Game() {

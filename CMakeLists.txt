@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/deps")
-set(SHADER_DIR "${CMAKE_CURRENT_LIST_DIR}/src/renderer/shaders")
+set(RESOURCES_DIR "${CMAKE_CURRENT_LIST_DIR}/resources")
 
 set(GAME_TARGET "game")
 set(GAME_TARGET_DEFINITIONS)
@@ -33,14 +33,15 @@ set(C_CPP_SOURCES
     "engine/renderer/swapchain.cpp"
     "engine/renderer/window.cpp"
 
+    "engine/resource_mgr/resource_mgr.cpp"
+
     "engine/utils/log.cpp"
 )
-set(SHADER_SOURCES
-    "engine/renderer/shaders/simple_frag.glsl"
-    "engine/renderer/shaders/simple_vert.glsl"
-)
 
 
+
+add_library(mini INTERFACE)
+target_include_directories(mini INTERFACE "${DEPS_DIR}/mini/src/")
 
 find_package(Vulkan REQUIRED)
 if (WIN32)
@@ -67,6 +68,7 @@ add_subdirectory("${DEPS_DIR}/cutils")
 
 add_executable(${GAME_TARGET} ${C_CPP_SOURCES})
 target_link_libraries(${GAME_TARGET}
+    mini
     volk
     glfw
     cutils)
@@ -81,22 +83,4 @@ target_compile_definitions(${GAME_TARGET}
 
 
 
-add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/spv/"
-)
-
-foreach(SHADER ${SHADER_SOURCES})
-    get_filename_component(SHADER_FILENAME ${SHADER} NAME)
-    add_custom_command(
-        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}" -g -o "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv"
-        DEPENDS ${SHADER}
-        COMMENT "Building SPIR-V object from ${SHADER_FILENAME}"
-    )
-
-    list(APPEND SPV_SHADERS "${CMAKE_CURRENT_BINARY_DIR}/spv/${SHADER_FILENAME}.spv")
-endforeach()
-
-add_custom_target(shaders_spv ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/spv/" ${SPV_SHADERS})
-add_dependencies(${GAME_TARGET} shaders_spv)
+add_subdirectory("${RESOURCES_DIR}")

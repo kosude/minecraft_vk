@@ -15,10 +15,12 @@
 
 namespace mcvk::Renderer {
     enum class ShaderStage {
-        Vertex      = 0,
-        Fragment    = 1
+        Null,
+        Vertex,
+        Fragment
     };
     VkShaderStageFlagBits ShaderStageToFlagBits(ShaderStage s);
+    ShaderStage StringToShaderStage(const std::string &str);
 
     struct ShaderInfo {
         ShaderStage stage;

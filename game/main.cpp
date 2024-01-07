@@ -15,8 +15,11 @@ using namespace mcvk;
 int main(int argc, char **argv) {
     Utils::ResetLogColour();
 
+    auto execdir = std::filesystem::path{argv[0]};
+    auto resourcedir = std::filesystem::path{execdir.remove_filename().string() + "/resources/"};
+
     try {
-        Game::Game game{};
+        Game::Game game{resourcedir};
 
         game.Run();
     } catch (const std::exception &e) {

@@ -16,6 +16,8 @@
 #include "renderer/swapchain.hpp"
 #include "renderer/window.hpp"
 
+#include "resource_mgr/resource_mgr.hpp"
+
 #include <volk/volk.h>
 
 #include <vector>
@@ -24,7 +26,7 @@
 namespace mcvk::Renderer {
     class Renderer {
     public:
-        Renderer(const Window &window);
+        Renderer(const Window &window, const ResourceMgr::ResourceManager &resmgr);
         ~Renderer();
 
         Renderer(const Renderer &) = delete;

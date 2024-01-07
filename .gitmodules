@@ -10,3 +10,6 @@
 [submodule "deps/cutils"]
 	path = deps/cutils
 	url = https://github.com/kosude/cutils
+[submodule "deps/mini"]
+	path = deps/mini
+	url = https://github.com/metayeti/mINI
