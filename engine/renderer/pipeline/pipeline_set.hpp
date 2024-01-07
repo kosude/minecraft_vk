@@ -14,14 +14,14 @@
 #include "resource_mgr/resource_mgr.hpp"
 
 #include <memory>
+#include <unordered_map>
 
 namespace mcvk::Renderer {
     struct PipelineSet {
     public:
         PipelineSet(const Device &device, const std::unique_ptr<Swapchain> &swapchain, const ResourceMgr::ResourceManager &resmgr);
 
-        inline const GraphicsPipeline &SimpleGraphics() const { return *_g_simple; }
-        inline const GraphicsPipeline &SimpleWireframeGraphics() const { return *_g_simple_wireframe; }
+        inline const GraphicsPipeline &GraphicsByName(const std::string &name) const { return *(_graphics_pipelines.at(name)); }
 
     private:
         friend class Renderer;
@@ -34,7 +34,6 @@ namespace mcvk::Renderer {
         const ResourceMgr::ResourceManager &_resmgr;
 
         typedef std::unique_ptr<GraphicsPipeline> GraphicsPipelinePtr;
-        GraphicsPipelinePtr _g_simple;
-        GraphicsPipelinePtr _g_simple_wireframe;
+        std::unordered_map<std::string, GraphicsPipelinePtr> _graphics_pipelines;
     };
 }

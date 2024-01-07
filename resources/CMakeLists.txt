@@ -1,11 +1,38 @@
+set(RES_PIPELINE_CONF)
 set(RES_SHADER_CONF)
 set(RES_GLSL)
 
+file(GLOB RES_PIPELINE_CONF
+    "${CMAKE_CURRENT_SOURCE_DIR}/pipelines/*.pipeline")
 file(GLOB RES_SHADER_CONF
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.shader")
 file(GLOB RES_GLSL
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.vert"
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.frag")
+
+
+
+# pipeline config files (.pipeline)
+# copied from resources/pipelines/ -> build/resources/pipelines/
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pipelines/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/pipelines/"
+    COMMENT ""
+)
+foreach(PIPELINE_CONF ${RES_PIPELINE_CONF})
+    get_filename_component(PIPELINE_CONF_FN ${PIPELINE_CONF} NAME)
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pipelines/${PIPELINE_CONF_FN}"
+        COMMAND ${CMAKE_COMMAND} -E copy "${PIPELINE_CONF}" "${CMAKE_CURRENT_BINARY_DIR}/pipelines/${PIPELINE_CONF_FN}"
+        DEPENDS ${PIPELINE_CONF}
+        COMMENT "")
+    list(APPEND PIPELINE_CONF_OUT "${CMAKE_CURRENT_BINARY_DIR}/pipelines/${PIPELINE_CONF_FN}")
+endforeach()
+add_custom_target(
+    gameresources_pipelineconfs ALL
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/pipelines/" ${PIPELINE_CONF_OUT})
+add_dependencies(${GAME_TARGET} gameresources_pipelineconfs)
 
 
 

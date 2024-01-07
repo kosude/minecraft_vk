@@ -82,7 +82,7 @@ namespace mcvk::Game {
                 break;
             }
 
-            const Renderer::GraphicsPipeline &g_simple = _renderer.Pipelines().SimpleGraphics();
+            const Renderer::GraphicsPipeline &g_simple = _renderer.Pipelines().GraphicsByName("g_simple");
 
             {
                 GlobalUniformData d;

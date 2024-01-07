@@ -9,6 +9,8 @@
 
 #include "renderer/pipeline/pipeline.hpp"
 
+#include "utils/log.hpp"
+
 namespace mcvk::Renderer {
     PipelineSet::PipelineSet(const Device &device, const std::unique_ptr<Swapchain> &swapchain, const ResourceMgr::ResourceManager &resmgr)
         : _device{device}, _swapchain{swapchain}, _resmgr{resmgr} {
@@ -19,29 +21,41 @@ namespace mcvk::Renderer {
     }
 
     void PipelineSet::_CreateGraphicsPipelines(const std::vector<VkDescriptorSetLayout> &set_layouts) {
-        auto config = GraphicsPipeline::Config::Defaults();
-        config.render_pass = _swapchain->GetRenderPass();
-        config.set_layouts = set_layouts;
-
-        ResourceMgr::ShaderResource shader;
-        _resmgr.Load("simple.shader", shader);
-
-        // _g_simple pipeline
-        {
-            config.rasterization_info.cullMode = VK_CULL_MODE_NONE;
-            _g_simple = std::make_unique<GraphicsPipeline>(_device, shader.shaders, config);
+        // find and parse pipeline config resources
+        std::vector<ResourceMgr::PipelineResource> pipeline_resources;
+        uint32_t i = 0;
+        for (const auto &confname : ResourceMgr::ResourceManager::GetAllFilenamesInDir(_resmgr.GetPipelineResourcesDir())) {
+            ResourceMgr::PipelineResource res{};
+            if (!_resmgr.Load(confname, res)) {
+                Utils::Warn("Found pipeline config with filename " + confname + " but failed to parse it. Skipping...");
+                continue;
+            }
+            pipeline_resources.push_back(res);
         }
 
-        // _g_simple_wireframe pipeline
-        {
-            config.rasterization_info.cullMode = VK_CULL_MODE_NONE;
-            config.rasterization_info.polygonMode = VK_POLYGON_MODE_LINE;
-            _g_simple_wireframe = std::make_unique<GraphicsPipeline>(_device, shader.shaders, config);
+        auto graphics_config = GraphicsPipeline::Config::Defaults();
+        graphics_config.render_pass = _swapchain->GetRenderPass();
+        graphics_config.set_layouts = set_layouts;
+
+        for (const auto &res : pipeline_resources) {
+            ResourceMgr::ShaderResource shader;
+            if (!_resmgr.Load(res.shader_name, shader)) {
+                Utils::Warn("Failed to load shader " + res.shader_name + " for pipeline " + res.name + ". Skipping...");
+                continue;
+            }
+
+            if (res.type == ResourceMgr::PipelineResource::Type::Graphics) {
+                graphics_config.rasterization_info.cullMode = res.cull_mode;
+                _graphics_pipelines.emplace(res.name, std::make_unique<GraphicsPipeline>(_device, shader.shaders, graphics_config));
+            }
         }
 
-        GraphicsPipeline::BuildGraphicsPipelines(_device, {
-            &*_g_simple,
-            &*_g_simple_wireframe,
-        });
+        // construct vector of 'unsafe' pipeline pointers (i know this is stupid but if I change any of the types I just get errors so oh well!!!)
+        std::vector<GraphicsPipeline *> graphics_pipeline_ptrs(_graphics_pipelines.size());
+        i = 0;
+        for (const auto &p : _graphics_pipelines) {
+            graphics_pipeline_ptrs[i++] = &*(p.second);
+        };
+        GraphicsPipeline::BuildGraphicsPipelines(_device, graphics_pipeline_ptrs);
     }
 }

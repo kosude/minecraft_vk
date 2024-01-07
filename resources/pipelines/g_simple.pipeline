@@ -1,0 +1,9 @@
+[detail]
+name = g_simple
+type = graphics
+
+[shaders]
+shader = simple.shader
+
+[rasterization]
+cull_mode = none
