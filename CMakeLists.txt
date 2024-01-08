@@ -43,6 +43,8 @@ set(C_CPP_SOURCES
 add_library(mini INTERFACE)
 target_include_directories(mini INTERFACE "${DEPS_DIR}/mini/src/")
 
+add_subdirectory("${DEPS_DIR}/tinyobjloader")
+
 find_package(Vulkan REQUIRED)
 if (WIN32)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
@@ -69,6 +71,7 @@ add_subdirectory("${DEPS_DIR}/cutils")
 add_executable(${GAME_TARGET} ${C_CPP_SOURCES})
 target_link_libraries(${GAME_TARGET}
     mini
+    tinyobjloader
     volk
     glfw
     cutils)

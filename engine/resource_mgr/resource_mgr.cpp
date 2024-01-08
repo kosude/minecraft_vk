@@ -60,7 +60,7 @@ namespace mcvk::ResourceMgr {
                 Utils::Error("Invalid shader: \"" + stage + "\" is not a valid stage. Skipping this stage.");
                 continue;
             }
-            res.shaders.push_back({stageenum, std::filesystem::path(GetShaderResourcesDir()) / "spv" / spv});
+            res.shaders.push_back({stageenum, std::filesystem::path{GetShaderResourcesDir()} / "spv" / spv});
         }
 
 
@@ -141,6 +141,47 @@ namespace mcvk::ResourceMgr {
 
 
         Utils::Info("Loaded pipeline \"" + res.name + "\"");
+        return true;
+    }
+
+    template<>
+    bool ResourceManager::Load<ModelResource>(const std::string &name, ModelResource &res) const {
+        mINI::INIStructure ini;
+        if (!_ReadConfigFile(GetModelResourcesDir() / std::filesystem::path{name}, ini)) {
+            return false;
+        }
+
+
+        // detail
+
+        if (!ini.has("detail")) {
+            Utils::Error("Invalid model: [detail] section is required.");
+            return false;
+        }
+        auto detail_sect = ini.get("detail");
+
+        res.name = detail_sect.get("name");
+
+
+        // model
+
+        if (!ini.has("model")) {
+            Utils::Error("Invalid model: [model] section is required.");
+            return false;
+        }
+        auto model_sect = ini.get("model");
+
+        if (model_sect.has("obj")) {
+            std::filesystem::path path = GetModelResourcesDir() / std::filesystem::path{model_sect.get("obj")};
+
+            std::string warn, err;
+            if (!tinyobj::LoadObj(&res.to_attrib, &res.to_shapes, &res.to_materials, &warn, &err, path.c_str())) {
+                Utils::Error("Failed to load model resource: " + warn + err);
+                return false;
+            }
+        }
+
+        Utils::Info("Loaded model \"" + res.name + "\"");
         return true;
     }
 

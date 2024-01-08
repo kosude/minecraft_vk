@@ -9,6 +9,7 @@
 
 #include "renderer/shader_set.hpp"
 
+#include <tiny_obj_loader.h>
 #include <volk/volk.h>
 
 #include <vector>
@@ -16,6 +17,12 @@
 namespace mcvk::ResourceMgr {
     struct GenericResource {
         std::string name;
+    };
+
+    struct ModelResource : public GenericResource {
+        tinyobj::attrib_t to_attrib;
+        std::vector<tinyobj::shape_t> to_shapes;
+        std::vector<tinyobj::material_t> to_materials;
     };
 
     struct PipelineResource : public GenericResource {

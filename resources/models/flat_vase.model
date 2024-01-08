@@ -1,0 +1,5 @@
+[detail]
+name = flat_vase
+
+[model]
+obj = flat_vase.obj

@@ -14,6 +14,10 @@
 
 #include <vector>
 
+namespace mcvk::ResourceMgr {
+    struct ModelResource;
+}
+
 namespace mcvk::Renderer {
     class Model {
     public:
@@ -34,6 +38,8 @@ namespace mcvk::Renderer {
                     (uv == other.uv);
             }
         };
+
+        static Model CreateFromResource(const ResourceMgr::ModelResource &resource);
 
         std::vector<Vertex> vertices;
         inline size_t GetVertexDataSize() const { return vertices.size() * sizeof(Vertex); }

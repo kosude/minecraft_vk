@@ -13,3 +13,6 @@
 [submodule "deps/mini"]
 	path = deps/mini
 	url = https://github.com/metayeti/mINI
+[submodule "deps/tinyobjloader"]
+	path = deps/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader

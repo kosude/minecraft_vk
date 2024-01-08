@@ -1,7 +1,11 @@
+set(RES_MODEL)
 set(RES_PIPELINE_CONF)
 set(RES_SHADER_CONF)
 set(RES_GLSL)
 
+file(GLOB RES_MODEL
+    "${CMAKE_CURRENT_SOURCE_DIR}/models/*.model"
+    "${CMAKE_CURRENT_SOURCE_DIR}/models/*.obj")
 file(GLOB RES_PIPELINE_CONF
     "${CMAKE_CURRENT_SOURCE_DIR}/pipelines/*.pipeline")
 file(GLOB RES_SHADER_CONF
@@ -9,6 +13,30 @@ file(GLOB RES_SHADER_CONF
 file(GLOB RES_GLSL
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.vert"
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.frag")
+
+
+
+# model object files (.obj)
+# copied from resources/models/ -> build/resources/models/
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/models/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/models/"
+    COMMENT ""
+)
+foreach(MODEL ${RES_MODEL})
+    get_filename_component(MODEL_FN ${MODEL} NAME)
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/models/${MODEL_FN}"
+        COMMAND ${CMAKE_COMMAND} -E copy "${MODEL}" "${CMAKE_CURRENT_BINARY_DIR}/models/${MODEL_FN}"
+        DEPENDS ${MODEL}
+        COMMENT "")
+    list(APPEND MODEL_OUT "${CMAKE_CURRENT_BINARY_DIR}/models/${MODEL_FN}")
+endforeach()
+add_custom_target(
+    gameresources_models ALL
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/models/" ${MODEL_OUT})
+add_dependencies(${GAME_TARGET} gameresources_models)
 
 
 

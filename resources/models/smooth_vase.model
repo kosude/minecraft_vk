@@ -1,0 +1,5 @@
+[detail]
+name = smooth_vase
+
+[model]
+obj = smooth_vase.obj

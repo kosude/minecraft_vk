@@ -25,6 +25,7 @@ namespace mcvk::ResourceMgr {
         template<typename RT>
         bool Load(const std::string &name, RT &res) const;
 
+        inline std::string GetModelResourcesDir() const { return _base.string() + "/models/"; }
         inline std::string GetPipelineResourcesDir() const { return _base.string() + "/pipelines/"; }
         inline std::string GetShaderResourcesDir() const { return _base.string() + "/shaders/"; }
 
@@ -38,4 +39,6 @@ namespace mcvk::ResourceMgr {
     bool ResourceManager::Load<ShaderResource>(const std::string &name, ShaderResource &res) const;
     template<>
     bool ResourceManager::Load<PipelineResource>(const std::string &name, PipelineResource &res) const;
+    template<>
+    bool ResourceManager::Load<ModelResource>(const std::string &name, ModelResource &res) const;
 }

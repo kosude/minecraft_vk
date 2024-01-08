@@ -1,0 +1,5 @@
+[detail]
+name = cube
+
+[model]
+obj = cube.obj

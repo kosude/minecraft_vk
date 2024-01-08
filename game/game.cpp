@@ -33,16 +33,9 @@ namespace mcvk::Game {
     }
 
     void Game::Run() {
-        Renderer::Model model;
-        model.vertices = {
-            { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { -0.5f,  0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-        };
-        model.indices = {
-            0, 1, 2, 0, 3, 2,
-        };
+        ResourceMgr::ModelResource mdl;
+        _resources.Load("monkey.model", mdl);
+        auto model = Renderer::Model::CreateFromResource(mdl);
 
         Renderer::VertexBuffer vbo{_renderer.GetDevice(), model.GetVertexDataSize()};
         vbo.Map();
@@ -88,13 +81,16 @@ namespace mcvk::Game {
             {
                 GlobalUniformData d;
                 d.projection = glm::perspective(glm::radians(70.0f), _window.GetAspectRatio(), 0.1f, 100.0f);
-                d.view = glm::lookAt(glm::vec3{0.0f, -0.5f, -2.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+                d.view = glm::lookAt(glm::vec3{0.0f, -1.0f, -3.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
                 ubo_global.Write(&d);
             }
             {
                 ModelUniformData d[2];
                 d[0].transform = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0, 0});
                 d[1].transform = glm::rotate(glm::translate(glm::mat4{1.0f}, glm::vec3{1.0f, 0, 0}), glm::radians(45.0f), glm::vec3{0, 0, 1});
+
+                d[0].transform = glm::scale(d[0].transform, glm::vec3{0.5f});
+                d[1].transform = glm::scale(d[1].transform, glm::vec3{0.5f});
                 ubo_model.Write(&d);
             }
 
