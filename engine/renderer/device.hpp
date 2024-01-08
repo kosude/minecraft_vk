@@ -79,6 +79,11 @@ namespace mcvk::Renderer {
         VkCommandPool _graphics_command_pool;
         VkCommandPool _transfer_command_pool;
 
-        const std::vector<const char *> _extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        const std::vector<const char *> _extensions = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#       ifdef APPLE
+            "VK_KHR_portability_subset",
+#       endif
+        };
     };
 }

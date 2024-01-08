@@ -48,12 +48,14 @@ namespace mcvk::Renderer {
         void _RecreateSwapchain();
         void _CreateCommandBuffers();
 
+        InstanceManager _instance_mgr;
+
         const Window &_window;
         const VkSurfaceKHR &_surface;
 
-        InstanceManager _instance_mgr;
         Device _device;
         PipelineSet _pipeline_set;
+
 
         std::unique_ptr<Swapchain> _swapchain;
         CommandBuffer _draw_command_buffer;

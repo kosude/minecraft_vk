@@ -32,9 +32,12 @@ namespace mcvk::Renderer {
         vkGetPhysicalDeviceMemoryProperties(_physical_device, &mem_props);
 
         for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++) {
-            if ((filter & (i << 1)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties) {
-                return i;
+            if ((filter & 1) == 1) {
+                if ((mem_props.memoryTypes[i].propertyFlags & properties) == properties) {
+                    return i;
+                }
             }
+            filter >>= 1;
         }
 
         Utils::Error("Failed to find suitable memory type");

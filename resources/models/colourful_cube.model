@@ -1,0 +1,5 @@
+[detail]
+name = colourful_cube
+
+[model]
+obj = colourful_cube.obj

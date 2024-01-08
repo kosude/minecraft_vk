@@ -13,6 +13,13 @@ set(GAME_TARGET_DEFINITIONS)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "DEBUG")
 endif()
+if (WIN32)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "WIN32")
+elseif (APPLE)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "APPLE")
+elseif (UNIX)
+    set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} "UNIX")
+endif()
 
 set(C_CPP_SOURCES
     "game/game.cpp"
@@ -45,12 +52,15 @@ target_include_directories(mini INTERFACE "${DEPS_DIR}/mini/src/")
 
 add_subdirectory("${DEPS_DIR}/tinyobjloader")
 
+add_library(glm INTERFACE)
+target_include_directories(glm INTERFACE "${DEPS_DIR}/glm/")
+
 find_package(Vulkan REQUIRED)
 if (WIN32)
     set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_WIN32_KHR)
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} WIN32)
 elseif (APPLE)
-    set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_MACOS_MVK)
+    set(VOLK_STATIC_DEFINES ${VOLK_STATIC_DEFINES} VK_USE_PLATFORM_METAL_EXT)
     set(GAME_TARGET_DEFINITIONS ${GAME_TARGET_DEFINITIONS} APPLE)
 elseif (UNIX)
     # will likely work on most unix machines
@@ -72,6 +82,7 @@ add_executable(${GAME_TARGET} ${C_CPP_SOURCES})
 target_link_libraries(${GAME_TARGET}
     mini
     tinyobjloader
+    glm
     volk
     glfw
     cutils)

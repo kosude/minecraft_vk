@@ -79,6 +79,10 @@ namespace mcvk::Renderer {
             instance_info.ppEnabledLayerNames = nullptr;
 #       endif
 
+#       ifdef APPLE
+            instance_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#       endif
+
         if (vkCreateInstance(&instance_info, nullptr, &_instance) != VK_SUCCESS) {
             Utils::Fatal("Failed to create Vulkan instance");
             return;
@@ -110,6 +114,10 @@ namespace mcvk::Renderer {
 
 #       ifdef DEBUG
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#       endif
+#       ifdef APPLE
+            extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+            extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #       endif
 
         return extensions;

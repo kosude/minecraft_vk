@@ -14,7 +14,6 @@
 #include <volk/volk.h>
 
 #include <cstring>
-#include <bits/timex.h>
 
 namespace mcvk::Renderer {
     Buffer::Buffer(const Device &device, VkDeviceSize size)
@@ -26,7 +25,7 @@ namespace mcvk::Renderer {
         // if graphics and transfer queues are in different families, then concurrently share data between those families
         QueueFamilyIndices families = _device.FindQueueFamilyIndices();
         if (families.graphics != families.transfer) {
-            _sharing_mode == VK_SHARING_MODE_CONCURRENT;
+            _sharing_mode = VK_SHARING_MODE_CONCURRENT;
             _queue_families = {
                 families.graphics.value(),
                 families.transfer.value() };

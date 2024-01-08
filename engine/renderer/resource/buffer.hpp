@@ -77,7 +77,7 @@ namespace mcvk::Renderer {
         const VkBuffer &GetBuffer() const;
         using Buffer::GetSize;
 
-        void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) override;
 
     private:
         struct BufferHandle {

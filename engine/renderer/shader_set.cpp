@@ -18,8 +18,9 @@ namespace mcvk::Renderer {
                 return VK_SHADER_STAGE_VERTEX_BIT;
             case ShaderStage::Fragment:
                 return VK_SHADER_STAGE_FRAGMENT_BIT;
+            default:
+                return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
         }
-        return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
     }
 
     ShaderStage StringToShaderStage(const std::string &str) {
