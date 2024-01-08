@@ -1,9 +1,10 @@
 [detail]
-name = g_duplicated
+name = g_wireframe
 type = graphics
 
 [shaders]
 shader = simple.shader
 
 [rasterization]
+polygon_mode = line
 cull_mode = none

@@ -126,6 +126,17 @@ namespace mcvk::ResourceMgr {
             } else {
                 Utils::Error("Invalid pipeline: \"" + cull_mode_str + "\" is not a valid fragment culling mode.");
             }
+
+            std::string polygon_mode_str = raster_sect.get("polygon_mode");
+            if (polygon_mode_str == "fill") {
+                res.polygon_mode = VK_POLYGON_MODE_FILL;
+            } else if (polygon_mode_str == "line") {
+                res.polygon_mode = VK_POLYGON_MODE_LINE;
+            } else if (polygon_mode_str == "point") {
+                res.polygon_mode = VK_POLYGON_MODE_POINT;
+            } else {
+                Utils::Error("Invalid pipeline: \"" + polygon_mode_str + "\" is not a valid polygon fill mode.");
+            }
         }
 
 

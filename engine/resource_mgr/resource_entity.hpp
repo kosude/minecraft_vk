@@ -27,6 +27,7 @@ namespace mcvk::ResourceMgr {
 
         std::string shader_name;
 
+        VkPolygonMode polygon_mode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags cull_mode{VK_CULL_MODE_NONE};
     };
 

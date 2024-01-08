@@ -45,7 +45,9 @@ namespace mcvk::Renderer {
             }
 
             if (res.type == ResourceMgr::PipelineResource::Type::Graphics) {
+                graphics_config.rasterization_info.polygonMode = res.polygon_mode;
                 graphics_config.rasterization_info.cullMode = res.cull_mode;
+
                 _graphics_pipelines.emplace(res.name, std::make_unique<GraphicsPipeline>(_device, shader.shaders, graphics_config));
             }
         }

@@ -83,17 +83,18 @@ namespace mcvk::Game {
             }
 
             const Renderer::GraphicsPipeline &g_simple = _renderer.Pipelines().GraphicsByName("g_simple");
+            const Renderer::GraphicsPipeline &g_wireframe = _renderer.Pipelines().GraphicsByName("g_wireframe");
 
             {
                 GlobalUniformData d;
                 d.projection = glm::perspective(glm::radians(70.0f), _window.GetAspectRatio(), 0.1f, 100.0f);
-                d.view = glm::lookAt(glm::vec3{0.0f, -2.0f, -1.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+                d.view = glm::lookAt(glm::vec3{0.0f, -0.5f, -2.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
                 ubo_global.Write(&d);
             }
             {
                 ModelUniformData d[2];
-                d[0].transform = glm::mat4{1.0f};
-                d[1].transform = glm::rotate(glm::mat4{1.0f}, glm::radians(45.0f), glm::vec3(0, 0, 1));
+                d[0].transform = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0, 0});
+                d[1].transform = glm::rotate(glm::translate(glm::mat4{1.0f}, glm::vec3{1.0f, 0, 0}), glm::radians(45.0f), glm::vec3{0, 0, 1});
                 ubo_model.Write(&d);
             }
 
@@ -102,12 +103,14 @@ namespace mcvk::Game {
 
                 drawbuf->UpdateViewportAndScissor();
 
-                drawbuf->BindPipeline(g_simple);
                 drawbuf->BindVertexBuffer(vbo);
                 drawbuf->BindIndexBuffer(ibo);
 
+                drawbuf->BindPipeline(g_wireframe);
                 drawbuf->BindDescriptorSets(g_simple, { dset }, { 0 });
                 drawbuf->DrawIndexed(model.indices.size());
+
+                drawbuf->BindPipeline(g_simple);
                 drawbuf->BindDescriptorSets(g_simple, { dset }, { sizeof(ModelUniformData) });
                 drawbuf->DrawIndexed(model.indices.size());
 

@@ -6,4 +6,5 @@ type = graphics
 shader = simple.shader
 
 [rasterization]
+polygon_mode = fill
 cull_mode = none
