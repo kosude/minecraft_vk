@@ -53,7 +53,7 @@ namespace mcvk::Game {
         Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 1}; // per-instance data
 
         ResourceMgr::MaterialResource mat;
-        _resources.Load("uvtest.material", mat);
+        _resources.Load("uvguide.material", mat);
         auto grass_img_config = Renderer::Image::Config::Defaults(
             {(uint32_t) mat.colourmap->width, (uint32_t) mat.colourmap->height}, VK_FORMAT_R8G8B8A8_SRGB);
         Renderer::Image grass_img{_renderer.GetDevice(), grass_img_config, *mat.colourmap};
@@ -98,6 +98,7 @@ namespace mcvk::Game {
             {
                 ModelUniformData d[1];
                 d[0].transform = glm::rotate(glm::mat4{1.0f}, (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0});
+                // d[0].transform = glm::mat4{1.0f};
                 ubo_model.Write(&d);
             }
 
