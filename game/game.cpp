@@ -112,7 +112,7 @@ namespace mcvk::Game {
             {
                 GlobalUniformData d;
                 d.projection = glm::perspective(glm::radians(70.0f), _window.GetAspectRatio(), 0.1f, 100.0f);
-                d.view = glm::lookAt(glm::vec3{0.0f, -2.0f, -3.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+                d.view = glm::lookAt(glm::vec3{0.0f, -1.5f, -2.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 3.5f, 0.0f});
                 ubo_global.Write(&d);
             }
             {
@@ -125,7 +125,7 @@ namespace mcvk::Game {
             }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
-                drawbuf->BeginRenderPass({ 0.03, 0.03, 0.03 }); // clear to a dark grey
+                drawbuf->BeginRenderPass({ 0.0, 0.0, (float) (abs(sin(glfwGetTime() * 2))) });
 
                 drawbuf->UpdateViewportAndScissor();
 

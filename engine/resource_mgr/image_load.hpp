@@ -12,6 +12,8 @@
 
 namespace mcvk::ResourceMgr {
     struct ImageLoadResult {
+        inline ImageLoadResult(uint8_t *d, int32_t w, int32_t h, int32_t c)
+            : bytes(d), width(w), height(h), channels(c) {}
         ~ImageLoadResult();
 
         uint8_t *bytes;
