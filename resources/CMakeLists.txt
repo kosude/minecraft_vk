@@ -96,11 +96,16 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/"
     COMMENT ""
 )
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(GLSLC_CMD_O_FLAG "-O0")
+else()
+    set(GLSLC_CMD_O_FLAG "-O")
+endif()
 foreach(GLSL ${RES_GLSL})
     get_filename_component(GLSL_FN ${GLSL} NAME)
     add_custom_command(
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/${GLSL_FN}.spv"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE} "${GLSL}" -g -o "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/${GLSL_FN}.spv"
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} "${GLSL}" -g ${GLSLC_CMD_O_FLAG} -o "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/${GLSL_FN}.spv"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/" ${GLSL}
         COMMENT "")
     list(APPEND GLSL_OUT "${CMAKE_CURRENT_BINARY_DIR}/shaders/spv/${GLSL_FN}.spv")
