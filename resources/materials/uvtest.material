@@ -1,0 +1,5 @@
+[detail]
+name = uvtest
+
+[textures]
+colour = uvtest.png

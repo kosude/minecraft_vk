@@ -53,20 +53,18 @@ namespace mcvk::Renderer {
             return;
         }
 
-        VkDeviceSize s, o;
+        VkDeviceSize s;
         if (size == VK_WHOLE_SIZE) {
             s = _size;
-            o = 0;
         } else {
             s = size;
-            o = offset;
         }
 
-        Invalidate(size, o);
+        Invalidate(size, offset);
         std::memcpy(_mapped, data, s);
-        Flush(size, o);
+        Flush(size, offset);
 
-        _TransferStaged(s, o);
+        _TransferStaged(s, offset);
     }
 
     void Buffer::Map(VkDeviceSize size, VkDeviceSize offset) {

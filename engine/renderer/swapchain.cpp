@@ -187,6 +187,7 @@ namespace mcvk::Renderer {
 
         // create image objects for each image, also creating image views
         auto image_config = Image::Config::Defaults(_swapchain_extent, _swapchain_image_format);
+        image_config.image_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         for (uint32_t i = 0; i < _swapchain_images.size(); i++) {
             _swapchain_images[i] = std::make_unique<Image>(_device, image_config, sc_images[i]);
         }

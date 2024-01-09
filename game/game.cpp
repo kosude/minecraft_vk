@@ -52,16 +52,24 @@ namespace mcvk::Game {
         Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
         Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 1}; // per-instance data
 
+        ResourceMgr::MaterialResource mat;
+        _resources.Load("uvtest.material", mat);
+        auto grass_img_config = Renderer::Image::Config::Defaults(
+            {(uint32_t) mat.colourmap->width, (uint32_t) mat.colourmap->height}, VK_FORMAT_R8G8B8A8_SRGB);
+        Renderer::Image grass_img{_renderer.GetDevice(), grass_img_config, *mat.colourmap};
+
         VkDescriptorSetLayout dset_layout = Renderer::DescriptorSetLayoutBuilder::New()
             .AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT)
             .AddBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1, VK_SHADER_STAGE_VERTEX_BIT)
+            .AddBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT)
             .Build(_renderer.GetDevice());
 
         _renderer.BuildPipelines({ dset_layout });
 
         std::vector<Renderer::DescriptorAllocatorGrowable::PoolSizeRatio> descriptor_ratios{
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 }
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
         };
         Renderer::DescriptorAllocatorGrowable dalloc{_renderer.GetDevice(), 2, descriptor_ratios};
 
@@ -69,6 +77,7 @@ namespace mcvk::Game {
         Renderer::DescriptorWriter::New()
             .AddWriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, ubo_global)
             .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0, sizeof(ModelUniformData))
+            .AddWriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, grass_img)
             .UpdateSet(_renderer.GetDevice(), dset);
 
         Utils::Info("Entering main loop...");

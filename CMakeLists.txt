@@ -40,6 +40,7 @@ set(C_CPP_SOURCES
     "engine/renderer/swapchain.cpp"
     "engine/renderer/window.cpp"
 
+    "engine/resource_mgr/image_load.cpp"
     "engine/resource_mgr/resource_mgr.cpp"
 
     "engine/utils/log.cpp"
@@ -76,6 +77,9 @@ set(CUTILS_CLIST OFF)
 set(CUTILS_CARRAY OFF)
 add_subdirectory("${DEPS_DIR}/cutils")
 
+add_library(stb_image "${DEPS_DIR}/stb/stb_image.c")
+target_include_directories(stb_image INTERFACE "${DEPS_DIR}/stb/")
+
 
 
 add_executable(${GAME_TARGET} ${C_CPP_SOURCES})
@@ -85,7 +89,8 @@ target_link_libraries(${GAME_TARGET}
     glm
     volk
     glfw
-    cutils)
+    cutils
+    stb_image)
 target_include_directories(${GAME_TARGET}
     PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"

@@ -306,6 +306,7 @@ namespace mcvk::Renderer {
         VkPhysicalDeviceFeatures features{};
 
         features.fillModeNonSolid = true;
+        features.samplerAnisotropy = true;
 
         return features;
     }

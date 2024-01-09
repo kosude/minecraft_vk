@@ -8,6 +8,7 @@
 #pragma once
 
 #include "renderer/shader_set.hpp"
+#include "resource_mgr/image_load.hpp"
 
 #include <tiny_obj_loader.h>
 #include <volk/volk.h>
@@ -17,6 +18,11 @@
 namespace mcvk::ResourceMgr {
     struct GenericResource {
         std::string name;
+    };
+
+    struct MaterialResource : public GenericResource {
+        // TODO: store separate colour maps (and normal+depth maps) for each side (top, bottom, and sides).
+        std::unique_ptr<ImageLoadResult> colourmap;
     };
 
     struct ModelResource : public GenericResource {

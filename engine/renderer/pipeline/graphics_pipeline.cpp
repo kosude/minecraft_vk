@@ -94,8 +94,6 @@ namespace mcvk::Renderer {
 
     GraphicsPipeline::GraphicsPipeline(const Device &device, const std::vector<ShaderInfo> &shaders, const Config &config)
         : _config{config}, Pipeline{device, shaders}{
-        Utils::Info("Configuring graphics pipeline with " + std::to_string(shaders.size()) + " shaders...");
-
         _BuildLayout();
         _BuildCreateInfo();
     }

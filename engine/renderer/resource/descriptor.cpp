@@ -155,6 +155,8 @@ namespace mcvk::Renderer {
     DescriptorWriter &DescriptorWriter::AddWriteImage(int32_t binding, VkDescriptorType type, const Image &image) {
         VkDescriptorImageInfo imginfo;
         imginfo.imageView = image.GetImageView();
+        imginfo.imageLayout = image.GetImageLayout();
+        imginfo.sampler = image.GetSampler();
         VkDescriptorImageInfo &imginfo_ref = _image_infos.emplace_back(imginfo);
 
         VkWriteDescriptorSet write{};

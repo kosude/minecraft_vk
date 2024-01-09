@@ -1,8 +1,12 @@
+set(RES_MATERIAL)
 set(RES_MODEL)
 set(RES_PIPELINE_CONF)
 set(RES_SHADER_CONF)
 set(RES_GLSL)
 
+file(GLOB RES_MATERIAL
+    "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.material"
+    "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.png")
 file(GLOB RES_MODEL
     "${CMAKE_CURRENT_SOURCE_DIR}/models/*.model"
     "${CMAKE_CURRENT_SOURCE_DIR}/models/*.obj")
@@ -13,6 +17,30 @@ file(GLOB RES_SHADER_CONF
 file(GLOB RES_GLSL
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.vert"
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.frag")
+
+
+
+# material files (.material) and related image files
+# copied from resources/materials/ -> build/resources/material/
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/materials/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/materials/"
+    COMMENT ""
+)
+foreach(MATERIAL ${RES_MATERIAL})
+    get_filename_component(MATERIAL_FN ${MATERIAL} NAME)
+    add_custom_command(
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/materials/${MATERIAL_FN}"
+        COMMAND ${CMAKE_COMMAND} -E copy "${MATERIAL}" "${CMAKE_CURRENT_BINARY_DIR}/materials/${MATERIAL_FN}"
+        DEPENDS ${MATERIAL}
+        COMMENT "")
+    list(APPEND MATERIAL_OUT "${CMAKE_CURRENT_BINARY_DIR}/materials/${MATERIAL_FN}")
+endforeach()
+add_custom_target(
+    gameresources_materials ALL
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/materials/" ${MATERIAL_OUT})
+add_dependencies(${GAME_TARGET} gameresources_materials)
 
 
 

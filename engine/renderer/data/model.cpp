@@ -57,8 +57,8 @@ namespace mcvk::Renderer {
 
                 if (index.texcoord_index >= 0) {
                     vertex.uv = {
-                        resource.to_attrib.texcoords[3 * index.texcoord_index + 0],
-                        resource.to_attrib.texcoords[3 * index.texcoord_index + 1]
+                        resource.to_attrib.texcoords[2 * index.texcoord_index + 0],
+                        resource.to_attrib.texcoords[2 * index.texcoord_index + 1]
                     };
                 }
 
