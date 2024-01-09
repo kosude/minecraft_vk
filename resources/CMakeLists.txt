@@ -9,7 +9,7 @@ file(GLOB RES_MODEL
 file(GLOB RES_PIPELINE_CONF
     "${CMAKE_CURRENT_SOURCE_DIR}/pipelines/*.pipeline")
 file(GLOB RES_SHADER_CONF
-    "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.shader")
+    "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.shad")
 file(GLOB RES_GLSL
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.vert"
     "${CMAKE_CURRENT_SOURCE_DIR}/shaders/glsl/*.frag")
@@ -64,7 +64,7 @@ add_dependencies(${GAME_TARGET} gameresources_pipelineconfs)
 
 
 
-# shader config files (.shader)
+# shader config files (.shad)
 # copied from resources/shaders/ -> build/resources/shaders/
 
 add_custom_command(

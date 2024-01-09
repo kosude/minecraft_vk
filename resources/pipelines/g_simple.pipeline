@@ -3,8 +3,8 @@ name = g_simple
 type = graphics
 
 [shaders]
-shader = simple.shader
+shader = simple.shad
 
 [rasterization]
 polygon_mode = fill
-cull_mode = none
+cull_mode = back

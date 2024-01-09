@@ -16,6 +16,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <cmath>
+
 namespace mcvk::Game {
     struct GlobalUniformData {
         glm::mat4 projection{1.0f};
@@ -34,7 +36,7 @@ namespace mcvk::Game {
 
     void Game::Run() {
         ResourceMgr::ModelResource mdl;
-        _resources.Load("monkey.model", mdl);
+        _resources.Load("cube.model", mdl);
         auto model = Renderer::Model::CreateFromResource(mdl);
 
         Renderer::VertexBuffer vbo{_renderer.GetDevice(), model.GetVertexDataSize()};
@@ -48,7 +50,7 @@ namespace mcvk::Game {
         ibo.Unmap();
 
         Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
-        Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 2}; // per-instance data; 2 instances
+        Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 1}; // per-instance data
 
         VkDescriptorSetLayout dset_layout = Renderer::DescriptorSetLayoutBuilder::New()
             .AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT)
@@ -81,16 +83,12 @@ namespace mcvk::Game {
             {
                 GlobalUniformData d;
                 d.projection = glm::perspective(glm::radians(70.0f), _window.GetAspectRatio(), 0.1f, 100.0f);
-                d.view = glm::lookAt(glm::vec3{0.0f, -1.0f, -3.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+                d.view = glm::lookAt(glm::vec3{0.0f, -2.0f, -3.0f}, glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
                 ubo_global.Write(&d);
             }
             {
-                ModelUniformData d[2];
-                d[0].transform = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 0, 0});
-                d[1].transform = glm::rotate(glm::translate(glm::mat4{1.0f}, glm::vec3{1.0f, 0, 0}), glm::radians(45.0f), glm::vec3{0, 0, 1});
-
-                d[0].transform = glm::scale(d[0].transform, glm::vec3{0.5f});
-                d[1].transform = glm::scale(d[1].transform, glm::vec3{0.5f});
+                ModelUniformData d[1];
+                d[0].transform = glm::rotate(glm::mat4{1.0f}, (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0});
                 ubo_model.Write(&d);
             }
 
@@ -102,12 +100,8 @@ namespace mcvk::Game {
                 drawbuf->BindVertexBuffer(vbo);
                 drawbuf->BindIndexBuffer(ibo);
 
-                drawbuf->BindPipeline(g_wireframe);
-                drawbuf->BindDescriptorSets(g_simple, { dset }, { 0 });
-                drawbuf->DrawIndexed(model.indices.size());
-
                 drawbuf->BindPipeline(g_simple);
-                drawbuf->BindDescriptorSets(g_simple, { dset }, { sizeof(ModelUniformData) });
+                drawbuf->BindDescriptorSets(g_simple, { dset }, { 0 });
                 drawbuf->DrawIndexed(model.indices.size());
 
                 drawbuf->EndRenderPass();

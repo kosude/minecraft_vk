@@ -3,7 +3,7 @@ name = g_wireframe
 type = graphics
 
 [shaders]
-shader = simple.shader
+shader = simple.shad
 
 [rasterization]
 polygon_mode = line
