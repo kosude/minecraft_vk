@@ -1,0 +1,10 @@
+[detail]
+name = g_monkey
+type = graphics
+
+[shaders]
+shader = monkey.shad
+
+[rasterization]
+polygon_mode = fill
+cull_mode = back

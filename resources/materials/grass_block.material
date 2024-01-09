@@ -1,0 +1,5 @@
+[detail]
+name = grass_block
+
+[textures]
+colour = grass_block.png

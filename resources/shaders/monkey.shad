@@ -1,0 +1,6 @@
+[detail]
+name = monkey
+
+[spirv]
+vertex = simple.vert.spv
+fragment = monkey.frag.spv
