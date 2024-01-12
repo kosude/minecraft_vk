@@ -125,7 +125,7 @@ namespace mcvk::Game {
             }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
-                drawbuf->BeginRenderPass({ 0.0, 0.0, (float) std::abs(sin(glfwGetTime() * 2)) });
+                drawbuf->BeginRenderPass({ (float) std::abs(sin(glfwGetTime() * 2)), 0.0, 0.0 });
 
                 drawbuf->UpdateViewportAndScissor();
 
