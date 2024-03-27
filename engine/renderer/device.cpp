@@ -176,10 +176,8 @@ namespace mcvk::Renderer {
         vkGetPhysicalDeviceFeatures(device, &features);
         VkPhysicalDeviceFeatures reqfeatures = _GetRequiredDeviceFeatures();
 
-        // TODO: NGL I was COOKING when I wrote this!!! I feel like the crazy bearded C programmers from the 70s just smiled down on me (even though
-        // this solution is horribly unsafe and assumes no padding but I DONT CARE!)
-        // Make sure I implement this in Thallium! (for reference, doing this currently takes ~50 more lines, macros, and badly inefficient code; this
-        // fixes all of that!!!!!EEEEEEEEE)
+        // i'm proud of this method it seems really cool
+        // TODO: implement this in Thallium :3
         VkBool32 *features_bools = reinterpret_cast<VkBool32 *>(&features);
         VkBool32 *reqfeatures_bools = reinterpret_cast<VkBool32 *>(&reqfeatures);
         uint32_t features_count = static_cast<uint32_t>(sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32));
