@@ -3,5 +3,8 @@ spv/
 **/*.spv
 
 .vscode/
+.cache/
 
 .DS_Store
+
+compile_commands.json
