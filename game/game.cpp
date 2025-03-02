@@ -60,8 +60,11 @@ namespace mcvk::Game {
         monkey_ibo.Write(monkey_model.GetIndexDataPtr());
         monkey_ibo.Unmap();
 
-        Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
-        Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 2}; // per-instance data
+        Renderer::UniformBuffer ubo_global{ _renderer,
+                                            Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(GlobalUniformData)) };
+        // a UBO each for the grass block and the monkey
+        Renderer::UniformBuffer ubo_model{ _renderer,
+                                           2 * Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData)) };
 
         ResourceMgr::MaterialResource mat;
         _resources.Load("grass_block.material", mat);
@@ -94,7 +97,8 @@ namespace mcvk::Game {
         VkDescriptorSet dset = dalloc.AllocateSet(dset_layout);
         Renderer::DescriptorWriter::New()
             .AddWriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, ubo_global)
-            .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0, sizeof(ModelUniformData))
+            .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0,
+                            Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData)))
             .AddWriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, grass_img)
             .AddWriteImage(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, monkey_img)
             .UpdateSet(_renderer.GetDevice(), dset);
@@ -121,7 +125,9 @@ namespace mcvk::Game {
                 d[1].transform = glm::scale(glm::rotate(glm::translate(glm::mat4{1.0f}, glm::vec3{0, -0.9f, 0}),
                     (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0}), glm::vec3{0.25f});
 
-                ubo_model.Write(&d);
+                // write uniform data blocks on aligned boundaries
+                ubo_model.Write(&d[0], sizeof(ModelUniformData), 0);
+                ubo_model.Write(&d[1], sizeof(ModelUniformData), Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData)));
             }
 
             if (auto drawbuf = _renderer.BeginDrawCommandBuffer()) {
@@ -138,7 +144,8 @@ namespace mcvk::Game {
                 drawbuf->BindPipeline(g_monkey);
                 drawbuf->BindVertexBuffer(monkey_vbo);
                 drawbuf->BindIndexBuffer(monkey_ibo);
-                drawbuf->BindDescriptorSets(g_simple, { dset }, { sizeof(ModelUniformData) });
+                drawbuf->BindDescriptorSets(g_simple, { dset },
+                    { static_cast<unsigned int>(Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData))) });
                 drawbuf->DrawIndexed(monkey_model.indices.size());
 
                 drawbuf->EndRenderPass();
