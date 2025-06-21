@@ -56,7 +56,6 @@ namespace mcvk::Renderer {
         Device _device;
         PipelineSet _pipeline_set;
 
-
         std::unique_ptr<Swapchain> _swapchain;
         CommandBuffer _draw_command_buffer;
     };

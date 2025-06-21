@@ -2,4 +2,4 @@
 name = monkey
 
 [model]
-obj = monkey.obj
+obj = _unused_monkey.obj

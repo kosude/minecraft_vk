@@ -38,9 +38,6 @@ namespace mcvk::Game {
         ResourceMgr::ModelResource mdl;
         _resources.Load("cube.model", mdl);
         auto model = Renderer::Model::CreateFromResource(mdl);
-        ResourceMgr::ModelResource monkey_mdl;
-        _resources.Load("monkey.model", monkey_mdl);
-        auto monkey_model = Renderer::Model::CreateFromResource(monkey_mdl);
 
         Renderer::VertexBuffer vbo{_renderer.GetDevice(), model.GetVertexDataSize()};
         vbo.Map();
@@ -51,15 +48,6 @@ namespace mcvk::Game {
         ibo.Write(model.GetIndexDataPtr());
         ibo.Unmap();
 
-        Renderer::VertexBuffer monkey_vbo{_renderer.GetDevice(), monkey_model.GetVertexDataSize()};
-        monkey_vbo.Map();
-        monkey_vbo.Write(monkey_model.GetVertexDataPtr());
-        monkey_vbo.Unmap();
-        Renderer::IndexBuffer monkey_ibo{_renderer.GetDevice(), monkey_model.GetIndexDataSize(), Renderer::Model::GetIndexType()};
-        monkey_ibo.Map();
-        monkey_ibo.Write(monkey_model.GetIndexDataPtr());
-        monkey_ibo.Unmap();
-
         Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
         Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 2}; // per-instance data
 
@@ -68,12 +56,6 @@ namespace mcvk::Game {
         auto grass_img_config = Renderer::Image::Config::Defaults(
             {(uint32_t) mat.colourmap->width, (uint32_t) mat.colourmap->height}, VK_FORMAT_R8G8B8A8_SRGB);
         Renderer::Image grass_img{_renderer.GetDevice(), grass_img_config, *mat.colourmap};
-
-        ResourceMgr::MaterialResource monkey_mat;
-        _resources.Load("monkey.material", monkey_mat);
-        auto monkey_img_config = Renderer::Image::Config::Defaults(
-            {(uint32_t) monkey_mat.colourmap->width, (uint32_t) monkey_mat.colourmap->height}, VK_FORMAT_R8G8B8A8_SRGB);
-        Renderer::Image monkey_img{_renderer.GetDevice(), monkey_img_config, *monkey_mat.colourmap};
 
         VkDescriptorSetLayout dset_layout = Renderer::DescriptorSetLayoutBuilder::New()
             .AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT)
@@ -96,12 +78,10 @@ namespace mcvk::Game {
             .AddWriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, ubo_global)
             .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0, sizeof(ModelUniformData))
             .AddWriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, grass_img)
-            .AddWriteImage(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, monkey_img)
             .UpdateSet(_renderer.GetDevice(), dset);
 
         const Renderer::GraphicsPipeline &g_simple = _renderer.Pipelines().GraphicsByName("g_simple");
         const Renderer::GraphicsPipeline &g_wireframe = _renderer.Pipelines().GraphicsByName("g_wireframe");
-        const Renderer::GraphicsPipeline &g_monkey = _renderer.Pipelines().GraphicsByName("g_monkey");
 
         Utils::Info("Entering main loop...");
         while (true) {
@@ -134,12 +114,6 @@ namespace mcvk::Game {
                 drawbuf->BindIndexBuffer(ibo);
                 drawbuf->BindDescriptorSets(g_simple, { dset }, { 0 });
                 drawbuf->DrawIndexed(model.indices.size());
-
-                drawbuf->BindPipeline(g_monkey);
-                drawbuf->BindVertexBuffer(monkey_vbo);
-                drawbuf->BindIndexBuffer(monkey_ibo);
-                drawbuf->BindDescriptorSets(g_simple, { dset }, { sizeof(ModelUniformData) });
-                drawbuf->DrawIndexed(monkey_model.indices.size());
 
                 drawbuf->EndRenderPass();
                 drawbuf->End();
