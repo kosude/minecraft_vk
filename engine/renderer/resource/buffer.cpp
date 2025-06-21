@@ -1,8 +1,8 @@
 /*
- *   Copyright (c) 2024 Jack Bennett.
- *   All Rights Reserved.
+ * Copyright (c) 2024 Jack Bennett.
+ * All Rights Reserved.
  *
- *   See the LICENCE file for more information.
+ * See the LICENCE file for more information.
  */
 
 #include "buffer.hpp"
