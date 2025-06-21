@@ -7,8 +7,6 @@
 
 #include "pipeline_set.hpp"
 
-#include "renderer/pipeline/pipeline.hpp"
-
 #include "utils/log.hpp"
 
 namespace mcvk::Renderer {

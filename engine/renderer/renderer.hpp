@@ -7,12 +7,10 @@
 
 #pragma once
 
-#include "renderer/pipeline/graphics_pipeline.hpp"
 #include "renderer/pipeline/pipeline_set.hpp"
 #include "renderer/command_buffer.hpp"
 #include "renderer/device.hpp"
 #include "renderer/instance_manager.hpp"
-#include "renderer/shader_set.hpp"
 #include "renderer/swapchain.hpp"
 #include "renderer/window.hpp"
 

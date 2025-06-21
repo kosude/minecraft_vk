@@ -14,7 +14,6 @@
 
 #include <volk/volk.h>
 
-#include <utility>
 #include <vector>
 
 namespace mcvk::Renderer {

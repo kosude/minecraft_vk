@@ -10,7 +10,6 @@
 #include "renderer/device.hpp"
 #include "renderer/shader_set.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace mcvk::Renderer {

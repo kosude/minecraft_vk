@@ -11,6 +11,7 @@
 #include <cioenum.h>
 
 #include <ctime>
+#include <iostream>
 
 static std::string __GetCurrentDateTime(const bool with_time);
 

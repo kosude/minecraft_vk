@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <bits/stringfwd.h>
 
 namespace mcvk::Utils {
     void ResetLogColour();

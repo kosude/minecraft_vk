@@ -8,8 +8,6 @@
 #include "game/game.hpp"
 #include "engine/utils/log.hpp"
 
-#include <stdexcept>
-
 using namespace mcvk;
 
 int main(int argc, char **argv) {

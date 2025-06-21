@@ -7,8 +7,6 @@
 
 #include "pipeline.hpp"
 
-#include "utils/log.hpp"
-
 namespace mcvk::Renderer {
     template<typename CreateInfoT>
     Pipeline<CreateInfoT>::Pipeline(const Device &device, const std::vector<ShaderInfo> &shaders)
