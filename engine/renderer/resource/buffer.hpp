@@ -83,9 +83,9 @@ namespace mcvk::Renderer {
 
     private:
         // different buffer system for uniform buffers due to persistent mapping
-        VkBuffer buf;
-        VkDeviceMemory mem;
-        void *mapped;
+        VkBuffer _buf;
+        VkDeviceMemory _mem;
+        void *_mapped;
 
         const Renderer &_renderer;
 

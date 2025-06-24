@@ -18,7 +18,7 @@ namespace mcvk::Renderer {
     }
 
     CommandBuffer::~CommandBuffer() {
-        vkFreeCommandBuffers(_device.GetDevice(), _device.GetGraphicsCommandPool(), static_cast<uint32_t>(_cmdbufs.size()), _cmdbufs.data());
+        vkFreeCommandBuffers(_device.GetDevice(), _device.GetGraphicsCommandPool(), 1, &_cb);
     }
 
     VkCommandBuffer CommandBuffer::BeginOneTimeSubmit(const Device &device, VkCommandPool command_pool) {
@@ -77,7 +77,6 @@ namespace mcvk::Renderer {
         }
 
         _frame_started = false;
-        _current_frame_index = (_current_frame_index + 1) % Swapchain::MAX_FRAMES_IN_FLIGHT;
     }
 
     void CommandBuffer::BeginRenderPass(VkClearColorValue clear_col) {
@@ -159,15 +158,13 @@ namespace mcvk::Renderer {
     void CommandBuffer::_Initialise(Renderer *const renderer) {
         _renderer = renderer;
 
-        _cmdbufs.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
-
         VkCommandBufferAllocateInfo info{};
 
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         info.commandPool = _device.GetGraphicsCommandPool();
-        info.commandBufferCount = static_cast<uint32_t>(_cmdbufs.size());
-        if (vkAllocateCommandBuffers(_device.GetDevice(), &info, _cmdbufs.data()) != VK_SUCCESS) {
+        info.commandBufferCount = 1;
+        if (vkAllocateCommandBuffers(_device.GetDevice(), &info, &_cb) != VK_SUCCESS) {
             Utils::Fatal("Failed to allocate command buffers");
         }
     }
@@ -177,8 +174,6 @@ namespace mcvk::Renderer {
             Utils::Error("Attempted to begin command buffer while a frame is already in progress");
             return;
         }
-
-        _cb = _cmdbufs[_current_frame_index];
 
         VkResult acquire = _swapchain->AcquireNextImage(&_current_image_index);
         if (acquire == VK_ERROR_OUT_OF_DATE_KHR) {

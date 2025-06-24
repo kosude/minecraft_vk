@@ -36,7 +36,6 @@ namespace mcvk::Renderer {
 
         inline const Device &GetDevice() const { return _device; }
         inline const PipelineSet &Pipelines() const { return _pipeline_set; }
-        inline const int32_t &GetCurrentFrame() const { return _draw_command_buffer._current_frame_index; }
 
         void WaitDeviceIdle();
 
@@ -55,7 +54,6 @@ namespace mcvk::Renderer {
 
         Device _device;
         PipelineSet _pipeline_set;
-
 
         std::unique_ptr<Swapchain> _swapchain;
         CommandBuffer _draw_command_buffer;

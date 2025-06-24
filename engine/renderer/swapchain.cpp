@@ -28,14 +28,9 @@ namespace mcvk::Renderer {
     }
 
     Swapchain::~Swapchain() {
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(_device.GetDevice(), _image_available_sems[i], nullptr);
-            vkDestroyFence(_device.GetDevice(), _frame_fences[i], nullptr);
-        }
-        for (uint32_t i = 0; i < _swapchain_images.size(); i++) {
-            // _draw_complete_sems is indexed by image instead of by frame; see https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
-            vkDestroySemaphore(_device.GetDevice(), _draw_complete_sems[i], nullptr);
-        }
+        vkDestroySemaphore(_device.GetDevice(), _image_available_sem, nullptr);
+        vkDestroySemaphore(_device.GetDevice(), _draw_complete_sem, nullptr);
+        vkDestroyFence(_device.GetDevice(), _frame_fence, nullptr);
 
         // explicitly free swapchain image objects as they are child objects of the swapchain (created as part of vkCreateSwapchainKHR)
         for (auto &imgptr : _swapchain_images) {
@@ -61,13 +56,13 @@ namespace mcvk::Renderer {
     }
 
     VkResult Swapchain::AcquireNextImage(uint32_t *const image_index) {
-        vkWaitForFences(_device.GetDevice(), 1, &_frame_fences[_current_frame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+        vkWaitForFences(_device.GetDevice(), 1, &_frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
         VkResult result = vkAcquireNextImageKHR(
             _device.GetDevice(),
             _swapchain,
             std::numeric_limits<uint64_t>::max(),
-            _image_available_sems[_current_frame],
+            _image_available_sem,
             VK_NULL_HANDLE,
             image_index);
 
@@ -75,7 +70,7 @@ namespace mcvk::Renderer {
     }
 
     VkResult Swapchain::SubmitCommandBuffers(const std::vector<VkCommandBuffer> &cmdbufs, uint32_t *const image_index) {
-        VkFence frame_fence = _frame_fences[_current_frame];
+        VkFence frame_fence = _frame_fence;
         vkWaitForFences(_device.GetDevice(), 1, &frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
         vkResetFences(_device.GetDevice(), 1, &frame_fence);
 
@@ -83,9 +78,9 @@ namespace mcvk::Renderer {
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
         submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = &_image_available_sems[_current_frame];
+        submit_info.pWaitSemaphores = &_image_available_sem;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &_draw_complete_sems[*image_index];
+        submit_info.pSignalSemaphores = &_draw_complete_sem;
 
         VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submit_info.pWaitDstStageMask = wait_stages;
@@ -93,7 +88,7 @@ namespace mcvk::Renderer {
         submit_info.commandBufferCount = static_cast<uint32_t>(cmdbufs.size());
         submit_info.pCommandBuffers = cmdbufs.data();
 
-        if (vkQueueSubmit(_device.GetGraphicsQueue(), 1, &submit_info, _frame_fences[_current_frame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(_device.GetGraphicsQueue(), 1, &submit_info, _frame_fence) != VK_SUCCESS) {
             Utils::Fatal("Failed to submit draw command buffer operations to graphics queue");
         }
 
@@ -102,15 +97,12 @@ namespace mcvk::Renderer {
 
         // wait for draw_complete semaphore (i.e. wait for GPU rendering to be complete)
         present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &_draw_complete_sems[*image_index];
+        present_info.pWaitSemaphores = &_draw_complete_sem;
 
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &_swapchain;
 
         present_info.pImageIndices = image_index;
-
-        // increment current frame index
-        _current_frame = (_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 
         return vkQueuePresentKHR(_device.GetPresentQueue(), &present_info);
     }
@@ -288,10 +280,6 @@ namespace mcvk::Renderer {
     }
 
     void Swapchain::_CreateSynchronisationPrims() {
-        _image_available_sems.resize(MAX_FRAMES_IN_FLIGHT);
-        _draw_complete_sems.resize(_swapchain_images.size()); // see https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
-        _frame_fences.resize(MAX_FRAMES_IN_FLIGHT);
-
         VkSemaphoreCreateInfo sem_info{};
         sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -299,16 +287,10 @@ namespace mcvk::Renderer {
         fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_image_available_sems[i]) != VK_SUCCESS ||
-                vkCreateFence(_device.GetDevice(), &fence_info, nullptr, &_frame_fences[i]) != VK_SUCCESS) {
-                Utils::Fatal("Failed to create synchronisation primitives for frame " + std::to_string(i));
-            }
-        }
-        for (uint32_t i = 0; i < _swapchain_images.size(); i++) {
-            if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_draw_complete_sems[i]) != VK_SUCCESS) {
-                Utils::Fatal("Failed to create synchronisation primitives for frame " + std::to_string(i));
-            }
+        if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_image_available_sem) != VK_SUCCESS ||
+            vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_draw_complete_sem) != VK_SUCCESS ||
+            vkCreateFence(_device.GetDevice(), &fence_info, nullptr, &_frame_fence) != VK_SUCCESS) {
+            Utils::Fatal("Failed to create synchronisation primitives");
         }
     }
 

@@ -158,7 +158,7 @@ namespace mcvk::Renderer {
 
     UniformBuffer::UniformBuffer(const Renderer &renderer, VkDeviceSize size)
         : Buffer(renderer.GetDevice(), size), _renderer{renderer} {
-        _CreateBuffer(&buf, &mem, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        _CreateBuffer(&_buf, &_mem, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         // persistent mapping - map buffer immediately after creation
@@ -166,16 +166,16 @@ namespace mcvk::Renderer {
     }
 
     UniformBuffer::~UniformBuffer() {
-        vkDestroyBuffer(_device.GetDevice(), buf, nullptr);
-        vkFreeMemory(_device.GetDevice(), mem, nullptr);
+        vkDestroyBuffer(_device.GetDevice(), _buf, nullptr);
+        vkFreeMemory(_device.GetDevice(), _mem, nullptr);
     }
 
     const VkBuffer &UniformBuffer::GetBuffer() const {
-        return buf;
+        return _buf;
     }
 
     void UniformBuffer::Write(void *data, VkDeviceSize size, VkDeviceSize offset) {
-        char *mapped = (char*)mapped; // char* for pointer arithmetic
+        char *mapped = (char*)_mapped; // char* for pointer arithmetic
 
         VkDeviceSize s, o;
         if (size == VK_WHOLE_SIZE) {
@@ -201,7 +201,7 @@ namespace mcvk::Renderer {
     }
 
     void UniformBuffer::_Map(VkDeviceSize size, VkDeviceSize offset) {
-        if (vkMapMemory(_device.GetDevice(), mem, offset, size, 0, &mapped) != VK_SUCCESS) {
+        if (vkMapMemory(_device.GetDevice(), _mem, offset, size, 0, &_mapped) != VK_SUCCESS) {
             Utils::Fatal("Failed to map host memory to device buffer (UBO)");
         }
     }
