@@ -82,16 +82,13 @@ namespace mcvk::Renderer {
         static VkDeviceSize AlignOffset(const Device &device, VkDeviceSize size);
 
     private:
-        struct BufferHandle {
-            VkBuffer buf;
-            VkDeviceMemory mem;
-            void *mapped;
-        };
+        // different buffer system for uniform buffers due to persistent mapping
+        VkBuffer buf;
+        VkDeviceMemory mem;
+        void *mapped;
 
         const Renderer &_renderer;
 
-        std::vector<BufferHandle> _buffer_handles;
-
-        void _Map(uint32_t index, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void _Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     };
 }
