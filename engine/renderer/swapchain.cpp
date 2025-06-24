@@ -28,8 +28,10 @@ namespace mcvk::Renderer {
     }
 
     Swapchain::~Swapchain() {
+        for (VkSemaphore &s : _draw_complete_sems) {
+            vkDestroySemaphore(_device.GetDevice(), s, nullptr);
+        }
         vkDestroySemaphore(_device.GetDevice(), _image_available_sem, nullptr);
-        vkDestroySemaphore(_device.GetDevice(), _draw_complete_sem, nullptr);
         vkDestroyFence(_device.GetDevice(), _frame_fence, nullptr);
 
         // explicitly free swapchain image objects as they are child objects of the swapchain (created as part of vkCreateSwapchainKHR)
@@ -80,7 +82,7 @@ namespace mcvk::Renderer {
         submit_info.waitSemaphoreCount = 1;
         submit_info.pWaitSemaphores = &_image_available_sem;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &_draw_complete_sem;
+        submit_info.pSignalSemaphores = &_draw_complete_sems[*image_index];
 
         VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submit_info.pWaitDstStageMask = wait_stages;
@@ -97,7 +99,7 @@ namespace mcvk::Renderer {
 
         // wait for draw_complete semaphore (i.e. wait for GPU rendering to be complete)
         present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &_draw_complete_sem;
+        present_info.pWaitSemaphores = &_draw_complete_sems[*image_index];
 
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &_swapchain;
@@ -280,6 +282,8 @@ namespace mcvk::Renderer {
     }
 
     void Swapchain::_CreateSynchronisationPrims() {
+        _draw_complete_sems.resize(_swapchain_images.size());
+
         VkSemaphoreCreateInfo sem_info{};
         sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -287,8 +291,14 @@ namespace mcvk::Renderer {
         fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
+        // create one draw_complete semaphore per swapchain image
+        for (VkSemaphore &s : _draw_complete_sems) {
+            if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &s) != VK_SUCCESS) {
+                Utils::Fatal("Failed to create synchronisation primitives");
+            }
+        }
+
         if (vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_image_available_sem) != VK_SUCCESS ||
-            vkCreateSemaphore(_device.GetDevice(), &sem_info, nullptr, &_draw_complete_sem) != VK_SUCCESS ||
             vkCreateFence(_device.GetDevice(), &fence_info, nullptr, &_frame_fence) != VK_SUCCESS) {
             Utils::Fatal("Failed to create synchronisation primitives");
         }

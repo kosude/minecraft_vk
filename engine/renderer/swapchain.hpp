@@ -65,7 +65,7 @@ namespace mcvk::Renderer {
         std::shared_ptr<Swapchain> _old_swapchain;
 
         VkSemaphore _image_available_sem;
-        VkSemaphore _draw_complete_sem;
+        std::vector<VkSemaphore> _draw_complete_sems; // one per image
         VkFence _frame_fence;
     };
 }
