@@ -17,7 +17,7 @@ namespace mcvk::Renderer {
     class Swapchain {
     public:
         Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent);
-        Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::shared_ptr<Swapchain> old);
+        Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::unique_ptr<Swapchain> &old);
         ~Swapchain();
 
         Swapchain(const Swapchain &) = delete;
@@ -26,8 +26,8 @@ namespace mcvk::Renderer {
         inline const VkRenderPass &GetRenderPass() const { return _render_pass; }
         inline const VkFramebuffer &GetFramebuffer(uint32_t index) const { return _swapchain_framebuffers[index]; }
         inline const VkExtent2D &GetExtent() const { return _swapchain_extent; }
-
-        bool CompareSwapFormats(const Swapchain &swapchain) const;
+        inline const VkFormat GetColourImageFormat() const { return _swapchain_image_format; }
+        inline const VkFormat GetDepthImageFormat() const { return _depth_image_format; }
 
         VkResult AcquireNextImage(uint32_t *const image_index);
         VkResult SubmitCommandBuffers(const std::vector<VkCommandBuffer> &cmdbufs, uint32_t *const image_index);
@@ -62,7 +62,7 @@ namespace mcvk::Renderer {
         VkExtent2D _window_extent;
 
         VkSwapchainKHR _swapchain;
-        std::shared_ptr<Swapchain> _old_swapchain;
+        std::unique_ptr<Swapchain> _old_swapchain;
 
         VkSemaphore _image_available_sem;
         std::vector<VkSemaphore> _draw_complete_sems; // one per image

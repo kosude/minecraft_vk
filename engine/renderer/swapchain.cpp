@@ -20,11 +20,9 @@ namespace mcvk::Renderer {
         _Init();
     }
 
-    Swapchain::Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::shared_ptr<Swapchain> old)
-        : _device{device}, _surface{surface}, _window_extent{window_extent} {
+    Swapchain::Swapchain(const Device &device, const VkSurfaceKHR &surface, VkExtent2D window_extent, std::unique_ptr<Swapchain> &old)
+        : _device{device}, _surface{surface}, _window_extent{window_extent}, _old_swapchain{std::move(old)} {
         _Init();
-
-        _old_swapchain = nullptr;
     }
 
     Swapchain::~Swapchain() {
@@ -49,12 +47,6 @@ namespace mcvk::Renderer {
         }
 
         vkDestroyRenderPass(_device.GetDevice(), _render_pass, nullptr);
-    }
-
-    bool Swapchain::CompareSwapFormats(const Swapchain &swapchain) const {
-        return
-            swapchain._depth_image_format       == _depth_image_format &&
-            swapchain._swapchain_image_format   == _swapchain_image_format;
     }
 
     VkResult Swapchain::AcquireNextImage(uint32_t *const image_index) {
@@ -168,6 +160,9 @@ namespace mcvk::Renderer {
 
         _swapchain_image_format = surface_format.format;
         _swapchain_extent = extent;
+
+        // destroy old swapchain class - cleans associated memory
+        _old_swapchain.reset();
     }
 
     void Swapchain::_ManageSwapchainImages() {
