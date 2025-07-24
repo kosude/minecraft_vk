@@ -11,7 +11,7 @@
 #include "utils/log.hpp"
 
 namespace mcvk::Renderer {
-    Renderer::Renderer(const Window &window, const ResourceMgr::ResourceManager &resmgr)
+    Renderer::Renderer(Window &window, const ResourceMgr::ResourceManager &resmgr)
         : _window{window},
         _instance_mgr{window},
         _surface{_instance_mgr.GetSurface()},
@@ -34,8 +34,10 @@ namespace mcvk::Renderer {
     }
 
     CommandBuffer *Renderer::BeginDrawCommandBuffer() {
-        _draw_command_buffer._Begin();
-        return &_draw_command_buffer;
+        if (_draw_command_buffer._Begin()) {
+            return &_draw_command_buffer;
+        }
+        return nullptr;
     }
 
     void Renderer::_RecreateSwapchain() {

@@ -72,6 +72,7 @@ namespace mcvk::Renderer {
         VkResult submit = _swapchain->SubmitCommandBuffers({ _cb }, &_current_image_index);
         if (submit == VK_ERROR_OUT_OF_DATE_KHR || submit == VK_SUBOPTIMAL_KHR || _renderer->_window.WasResized()) {
             _renderer->_RecreateSwapchain();
+            _renderer->_window.CompleteResize();
         } else if (submit != VK_SUCCESS) {
             Utils::Fatal("Failed to present swap chain image");
         }
@@ -169,16 +170,17 @@ namespace mcvk::Renderer {
         }
     }
 
-    void CommandBuffer::_Begin() {
+    bool CommandBuffer::_Begin() {
         if (_frame_started) {
             Utils::Error("Attempted to begin command buffer while a frame is already in progress");
-            return;
+            return false;
         }
 
         VkResult acquire = _swapchain->AcquireNextImage(&_current_image_index);
-        if (acquire == VK_ERROR_OUT_OF_DATE_KHR) {
+        if (acquire == VK_ERROR_OUT_OF_DATE_KHR || _renderer->_window.WasResized()) {
             _renderer->_RecreateSwapchain();
-            return;
+            _renderer->_window.CompleteResize();
+            return false;
         }
         if (acquire != VK_SUCCESS && acquire != VK_SUBOPTIMAL_KHR) {
             Utils::Fatal("Failed to acquire next swapchain image");
@@ -192,5 +194,8 @@ namespace mcvk::Renderer {
         if (vkBeginCommandBuffer(_cb, &info) != VK_SUCCESS) {
             Utils::Fatal("Failed to begin recording to command buffer");
         }
+
+        return true;
+
     }
 }

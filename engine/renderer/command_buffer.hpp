@@ -14,7 +14,6 @@
 
 #include <volk/volk.h>
 
-#include <utility>
 #include <vector>
 
 namespace mcvk::Renderer {
@@ -51,7 +50,7 @@ namespace mcvk::Renderer {
 
         void _Initialise(Renderer *const renderer);
 
-        void _Begin();
+        bool _Begin();
 
         const Device &_device;
         const std::unique_ptr<Swapchain> &_swapchain;

@@ -26,7 +26,7 @@
 namespace mcvk::Renderer {
     class Renderer {
     public:
-        Renderer(const Window &window, const ResourceMgr::ResourceManager &resmgr);
+        Renderer(Window &window, const ResourceMgr::ResourceManager &resmgr);
         ~Renderer();
 
         Renderer(const Renderer &) = delete;
@@ -49,7 +49,7 @@ namespace mcvk::Renderer {
 
         InstanceManager _instance_mgr;
 
-        const Window &_window;
+        Window &_window;
         const VkSurfaceKHR &_surface;
 
         Device _device;
