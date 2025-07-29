@@ -12,7 +12,6 @@
 namespace mcvk::Renderer {
     class Renderer;
 
-
     class Buffer {
     public:
         Buffer(const Device &device, VkDeviceSize size);
@@ -37,26 +36,23 @@ namespace mcvk::Renderer {
 
         VkDeviceSize _size;
 
-    private:
-        void _TransferStaged(VkDeviceSize size, VkDeviceSize offset);
-
         void *_mapped{nullptr};
-
         VkBuffer _buffer{VK_NULL_HANDLE};
         VkDeviceMemory _memory{VK_NULL_HANDLE};
         VkBuffer _stage{VK_NULL_HANDLE};
         VkDeviceMemory _stage_memory{VK_NULL_HANDLE};
 
+    private:
+        void _TransferStaged(VkDeviceSize size, VkDeviceSize offset);
+
         std::vector<uint32_t> _queue_families{};
         VkSharingMode _sharing_mode{VK_SHARING_MODE_EXCLUSIVE};
     };
-
 
     class VertexBuffer : public Buffer {
     public:
         VertexBuffer(const Device &device, VkDeviceSize size);
     };
-
 
     class IndexBuffer : public Buffer {
     public:
@@ -68,29 +64,16 @@ namespace mcvk::Renderer {
         VkIndexType _index_type;
     };
 
-
-    class UniformBuffer : private Buffer {
+    class UniformBuffer : public Buffer {
     public:
         UniformBuffer(const Renderer &renderer, VkDeviceSize size);
-        ~UniformBuffer() override;
-
-        const VkBuffer &GetBuffer() const;
-        using Buffer::GetSize;
 
         void Write(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) override;
         static VkDeviceSize AlignOffset(const Device &device, VkDeviceSize size);
 
     private:
-        struct BufferHandle {
-            VkBuffer buf;
-            VkDeviceMemory mem;
-            void *mapped;
-        };
-
         const Renderer &_renderer;
 
-        std::vector<BufferHandle> _buffer_handles;
-
-        void _Map(uint32_t index, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void _Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     };
 }
