@@ -56,11 +56,9 @@ namespace mcvk::Renderer {
         const std::unique_ptr<Swapchain> &_swapchain;
         Renderer *_renderer{nullptr};
 
-        std::vector<VkCommandBuffer> _cmdbufs;
         VkCommandBuffer _cb;
 
         uint32_t _current_image_index{0};
-        int32_t _current_frame_index{0};
         bool _frame_started{false};
     };
 }
