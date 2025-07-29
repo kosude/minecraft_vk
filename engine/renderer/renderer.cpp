@@ -51,11 +51,15 @@ namespace mcvk::Renderer {
         if (!_swapchain) {
             _swapchain = std::make_unique<Swapchain>(_device, _surface, extent);
         } else {
-            // recreate from existing swapchain when possible
-            std::shared_ptr<Swapchain> old = std::move(_swapchain);
-            _swapchain = std::make_unique<Swapchain>(_device, _surface, extent, old);
+            // used to compare
+            VkFormat old_fmt_col = _swapchain->GetColourImageFormat();
+            VkFormat old_fmt_depth = _swapchain->GetDepthImageFormat();
 
-            if (!old->CompareSwapFormats(*(_swapchain.get()))) {
+            // recreate from existing swapchain when possible
+            _swapchain = std::make_unique<Swapchain>(_device, _surface, extent, _swapchain);
+
+            if (old_fmt_col != _swapchain->GetColourImageFormat()
+                || old_fmt_depth != _swapchain->GetDepthImageFormat()) {
                 Utils::Fatal("When recreating swap chain: image or depth buffer format has changed");
             }
         }
