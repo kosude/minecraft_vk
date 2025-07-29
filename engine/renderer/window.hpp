@@ -27,6 +27,7 @@ namespace mcvk::Renderer {
 
         inline VkExtent2D GetExtent() const { return { static_cast<uint32_t>(_width), static_cast<uint32_t>(_height) }; }
         inline const bool &WasResized() const { return _framebuffer_resized; }
+        inline void CompleteResize() { _framebuffer_resized = false; }
         float GetAspectRatio() const;
         static std::vector<const char *> GetGLFWRequiredExtensions();
 
