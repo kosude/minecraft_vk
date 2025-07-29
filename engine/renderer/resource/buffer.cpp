@@ -146,16 +146,13 @@ namespace mcvk::Renderer {
         CommandBuffer::EndOneTimeSubmit(_device, _device.GetTransferCommandPool(), _device.GetTransferQueue(), cmdbuf);
     }
 
-
     VertexBuffer::VertexBuffer(const Device &device, VkDeviceSize size)
         : Buffer{device, size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT} {
     }
 
-
     IndexBuffer::IndexBuffer(const Device &device, VkDeviceSize size, VkIndexType index_type)
         : Buffer{device, size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT}, _index_type{index_type} {
     }
-
 
     UniformBuffer::UniformBuffer(const Renderer &renderer, VkDeviceSize size)
         : Buffer(renderer.GetDevice(), size), _renderer{renderer} {
@@ -186,7 +183,7 @@ namespace mcvk::Renderer {
 
     void UniformBuffer::Write(void *data, VkDeviceSize size, VkDeviceSize offset) {
         int32_t index = _renderer.GetCurrentFrame();
-        void *mapped = _buffer_handles[index].mapped;
+        char *mapped = (char*)_buffer_handles[index].mapped; // char* for pointer arithmetic
 
         VkDeviceSize s, o;
         if (size == VK_WHOLE_SIZE) {
@@ -197,7 +194,18 @@ namespace mcvk::Renderer {
             o = offset;
         }
 
-        std::memcpy(mapped, data, s);
+        std::memcpy(mapped + o, data, s);
+    }
+
+    VkDeviceSize UniformBuffer::AlignOffset(const Device &device, VkDeviceSize size) {
+        VkDeviceSize min_align = device.GetProperties().limits.minUniformBufferOffsetAlignment;
+
+        // courtesy of Sascha Willems: https://github.com/SaschaWillems/Vulkan/tree/master/examples/dynamicuniformbuffer
+        VkDeviceSize aligned = size;
+        if (min_align > 0) {
+            aligned = (aligned + min_align - 1) & ~(min_align - 1);
+        }
+        return aligned;
     }
 
     void UniformBuffer::_Map(uint32_t index, VkDeviceSize size, VkDeviceSize offset) {

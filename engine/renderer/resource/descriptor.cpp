@@ -130,7 +130,6 @@ namespace mcvk::Renderer {
         return layout;
     }
 
-
     DescriptorWriter &DescriptorWriter::AddWriteBuffer(int32_t binding, VkDescriptorType type, const UniformBuffer &buffer, VkDeviceSize offset,
         VkDeviceSize range) {
         VkDescriptorBufferInfo bufinfo;

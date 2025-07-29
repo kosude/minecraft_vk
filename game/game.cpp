@@ -48,8 +48,10 @@ namespace mcvk::Game {
         ibo.Write(model.GetIndexDataPtr());
         ibo.Unmap();
 
-        Renderer::UniformBuffer ubo_global{_renderer, sizeof(GlobalUniformData)};
-        Renderer::UniformBuffer ubo_model{_renderer, sizeof(ModelUniformData) * 2}; // per-instance data
+        Renderer::UniformBuffer ubo_global{_renderer,
+                                           Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(GlobalUniformData))};
+        Renderer::UniformBuffer ubo_model{_renderer,
+                                           Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData))};
 
         ResourceMgr::MaterialResource mat;
         _resources.Load("grass_block.material", mat);
@@ -76,7 +78,8 @@ namespace mcvk::Game {
         VkDescriptorSet dset = dalloc.AllocateSet(dset_layout);
         Renderer::DescriptorWriter::New()
             .AddWriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, ubo_global)
-            .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0, sizeof(ModelUniformData))
+            .AddWriteBuffer(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, ubo_model, 0,
+                            Renderer::UniformBuffer::AlignOffset(_renderer.GetDevice(), sizeof(ModelUniformData)))
             .AddWriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, grass_img)
             .UpdateSet(_renderer.GetDevice(), dset);
 
@@ -96,11 +99,8 @@ namespace mcvk::Game {
                 ubo_global.Write(&d);
             }
             {
-                ModelUniformData d[2];
-                d[0].transform = glm::rotate(glm::mat4{1.0f}, (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0});
-                d[1].transform = glm::scale(glm::rotate(glm::translate(glm::mat4{1.0f}, glm::vec3{0, -0.9f, 0}),
-                    (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0}), glm::vec3{0.25f});
-
+                ModelUniformData d;
+                d.transform = glm::rotate(glm::mat4{1.0f}, (float) glm::radians(std::fmod(glfwGetTime() * 100, 360)), glm::vec3{0, 1, 0});
                 ubo_model.Write(&d);
             }
 
